@@ -19,7 +19,6 @@ let real: PubSubEventEmitterOrEventEmitter;
 let noCluster: PubSubEventEmitterOrEventEmitter;
 let singleHost: PubSubEventEmitterOrEventEmitter;
 
-
 function get(): PubSubEventEmitterOrEventEmitter {
     if (real) {
         return real;
@@ -69,7 +68,9 @@ function get(): PubSubEventEmitterOrEventEmitter {
         }
         pubsub = singleHost;
     } else if (nconf.get('redis')) {
-        pubsub = require('./database/redis/pubsub') as PubSubEventEmitter;
+        import('./database/redis/pubsub')
+            .then(({ PubSub }) => { pubsub = PubSub as PubSubEventEmitter; })
+            .catch(err => console.error(err));
     } else {
         throw new Error('[[error:redis-required-for-pubsub]]');
     }
