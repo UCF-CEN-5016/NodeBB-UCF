@@ -7,8 +7,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = __importDefault(require("events"));
 // eslint-disable-next-line import/no-import-module-exports
 const nconf_1 = __importDefault(require("nconf"));
-// eslint-disable-next-line import/no-import-module-exports
-const pubsub_1 = __importDefault(require("./database/redis/pubsub"));
 let real;
 let noCluster;
 let singleHost;
@@ -60,7 +58,7 @@ function get() {
         pubsub = singleHost;
     }
     else if (nconf_1.default.get('redis')) {
-        pubsub = pubsub_1.default;
+        pubsub = require('./database/redis/pubsub');
     }
     else {
         throw new Error('[[error:redis-required-for-pubsub]]');

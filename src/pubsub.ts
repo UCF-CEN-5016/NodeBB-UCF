@@ -2,8 +2,6 @@
 import EventEmitter from 'events';
 // eslint-disable-next-line import/no-import-module-exports
 import nconf from 'nconf';
-// eslint-disable-next-line import/no-import-module-exports
-import redisPubSub from './database/redis/pubsub';
 
 type emitType = typeof EventEmitter.prototype.emit;
 
@@ -71,7 +69,7 @@ function get(): PubSubEventEmitterOrEventEmitter {
         }
         pubsub = singleHost;
     } else if (nconf.get('redis')) {
-        pubsub = redisPubSub as PubSubEventEmitter;
+        pubsub = require('./database/redis/pubsub') as PubSubEventEmitter;
     } else {
         throw new Error('[[error:redis-required-for-pubsub]]');
     }
