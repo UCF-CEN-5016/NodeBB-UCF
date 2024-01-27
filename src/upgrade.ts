@@ -25,9 +25,12 @@ type Upgrade = {
   appendPluginScripts: (files: string[]) => Promise<string[]>;
   check: () => Promise<void>;
   run: () => Promise<void>;
-  runParticular: (names: string[]) => Promise<void>;
+  runParticular: (names: string[]) => Promise<void>; // DONE
   process: (files: string[], skipCount: number) => Promise<void>;
-  incrementProgress: (value: number) => void;
+  incrementProgress: (value: number) => void; // DONE
+  current: number;
+  counter: number;
+  total: number;
 };
 
 const Upgrade: Upgrade = module.exports as Upgrade;
@@ -132,11 +135,9 @@ Upgrade.run = async function () {
 
 Upgrade.runParticular = async function (names) {
     console.log('\nParsing upgrade scripts... ');
-    const files = await file.walk(path.join(__dirname, './upgrades'));
+    const files: string[] = await file.walk(path.join(__dirname, './upgrades')) as string[];
     await Upgrade.appendPluginScripts(files);
-    const upgrades = files.filter((file) =>
-        names.includes(path.basename(file, '.js'))
-    );
+    const upgrades = files.filter((file: string) => names.includes(path.basename(file, '.js')));
     await Upgrade.process(upgrades, 0);
 };
 
@@ -223,7 +224,7 @@ Upgrade.process = async function (files, skipCount) {
     console.log(chalk.green('Schema update complete!\n'));
 };
 
-Upgrade.incrementProgress = function (value) {
+Upgrade.incrementProgress = function (this: Upgrade, value: number) {
     // Newline on first invocation
     if (this.current === 0) {
         process.stdout.write('\n');
