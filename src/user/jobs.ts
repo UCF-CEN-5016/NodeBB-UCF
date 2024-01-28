@@ -20,7 +20,7 @@ type DigestModule = {
     getUsersInterval: (uids: string) => Promise<any[]> | Promise<boolean>;
     getSubscribers: (interval: number) => Promise<string>;
     send: (data: any) => Promise<void>;
-    getDeliveryTimes: (start: number, stop: number) => Promise<{users: any, count: number}>
+    getDeliveryTimes: (start: number, stop: number) => Promise<{ users: any, count: number }>
 }
 
 type UserType = {
@@ -86,11 +86,12 @@ module.exports = function (User: UserType) {
         winston.verbose(`[user/jobs] jobs started`);
     };
 
-    User.stopJobs = function () {
+    User.stopJobs = function (): void {
         let terminated = 0;
         // Terminate any active cron jobs
         for (const jobId of Object.keys(jobs)) {
             winston.verbose(`[user/jobs] Terminating job (${jobId})`);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
             jobs[jobId].stop();
             delete jobs[jobId];
             terminated += 1;
