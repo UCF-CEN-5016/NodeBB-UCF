@@ -37,6 +37,30 @@ const jobs = {};
 const cronJob = cron.CronJob as CronJobType<any>;
 
 module.exports = function (User: UserType) {
+    function startDigestJob(name: string, cronString: string, term: string): void {
+        jobs[name] = new cronJob(cronString, (async () => {
+            winston.verbose(`[user/jobs] Digest job (${name}) started.`);
+            try {
+                if (name === 'digest.weekly') {
+                    // eslint-disable-next-line max-len
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                    const counter: number = await db.increment('biweeklydigestcounter') as number;
+                    if (counter % 2) {
+                        // eslint-disable-next-line max-len
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+                        await User.digest.execute({ interval: 'biweek' });
+                    }
+                }
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+                await User.digest.execute({ interval: term });
+            } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+                winston.error(err.stack);
+            }
+        }), null, true) as CronJobType<any>;
+        winston.verbose(`[user/jobs] Starting job (${name})`);
+    }
+    
     User.startJobs = function () {
         winston.verbose('[user/jobs] (Re-)starting jobs...');
 
@@ -60,24 +84,6 @@ module.exports = function (User: UserType) {
 
         winston.verbose(`[user/jobs] jobs started`);
     };
-
-    function startDigestJob(name, cronString, term) {
-        jobs[name] = new cronJob(cronString, (async () => {
-            winston.verbose(`[user/jobs] Digest job (${name}) started.`);
-            try {
-                if (name === 'digest.weekly') {
-                    const counter = await db.increment('biweeklydigestcounter');
-                    if (counter % 2) {
-                        await User.digest.execute({ interval: 'biweek' });
-                    }
-                }
-                await User.digest.execute({ interval: term });
-            } catch (err) {
-                winston.error(err.stack);
-            }
-        }), null, true);
-        winston.verbose(`[user/jobs] Starting job (${name})`);
-    }
 
     User.stopJobs = function () {
         let terminated = 0;
