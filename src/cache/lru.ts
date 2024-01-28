@@ -157,3 +157,4 @@ function cacheCreate(opts : Opts) {
 }
 
 export = cacheCreate;
+
