@@ -60,14 +60,14 @@ module.exports = function (User: UserType) {
         }), null, true) as CronJobType<any>;
         winston.verbose(`[user/jobs] Starting job (${name})`);
     }
-    
-    User.startJobs = function () {
+
+    User.startJobs = function (): void {
         winston.verbose('[user/jobs] (Re-)starting jobs...');
 
-        let { digestHour } = meta.config;
+        let { digestHour }: any = meta.config as object;
 
         // Fix digest hour if invalid
-        if (isNaN(digestHour)) {
+        if (isNaN(digestHour as number)) {
             digestHour = 17;
         } else if (digestHour > 23 || digestHour < 0) {
             digestHour = 0;
@@ -75,11 +75,12 @@ module.exports = function (User: UserType) {
 
         User.stopJobs();
 
-        startDigestJob('digest.daily', `0 ${digestHour} * * *`, 'day');
-        startDigestJob('digest.weekly', `0 ${digestHour} * * 0`, 'week');
-        startDigestJob('digest.monthly', `0 ${digestHour} 1 * *`, 'month');
+        startDigestJob('digest.daily', `0 ${digestHour as number} * * *`, 'day');
+        startDigestJob('digest.weekly', `0 ${digestHour as number} * * 0`, 'week');
+        startDigestJob('digest.monthly', `0 ${digestHour as number} 1 * *`, 'month');
 
-        jobs['reset.clean'] = new cronJob('0 0 * * *', User.reset.clean, null, true);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        jobs['reset.clean'] = new cronJob('0 0 * * *', User.reset.clean, null, true) as CronJobType<any>;
         winston.verbose('[user/jobs] Starting job (reset.clean)');
 
         winston.verbose(`[user/jobs] jobs started`);
