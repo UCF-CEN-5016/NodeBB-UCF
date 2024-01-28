@@ -20,15 +20,20 @@ module.exports = function (Messaging) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         yield Messaging.checkContent(content);
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        // eslint-disable-next-line max-len
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const raw = yield Messaging.getMessageField(mid, 'content');
         if (raw === content) {
             return;
         }
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const payload = yield plugins.hooks.fire('filter:messaging.edit', {
             content: content,
             edited: Date.now(),
         });
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (!String(payload.content).trim()) {
             throw new Error('[[error:invalid-chat-message]]');
         }
@@ -36,6 +41,8 @@ module.exports = function (Messaging) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         yield Messaging.setMessageFields(mid, payload);
         // Propagate this change to users in the room
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const [uids, messages] = yield Promise.all([
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -48,8 +55,11 @@ module.exports = function (Messaging) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         uids.forEach((uid) => {
             // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            // eslint-disable-next-line max-len
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/restrict-template-expressions
             sockets.in(`uid_${uid}`).emit('event:chats.edit', {
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 messages: messages,
             });
         });
@@ -82,8 +92,11 @@ module.exports = function (Messaging) {
             throw new Error('[[error:chat-message-editing-disabled]]');
         }
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        // eslint-disable-next-line max-len
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         const userData = yield user.getUserFields(uid, ['banned']);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (userData.banned) {
             throw new Error('[[error:user-banned]]');
         }
@@ -92,13 +105,23 @@ module.exports = function (Messaging) {
             throw new Error('[[error:no-privileges]]');
         }
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        // eslint-disable-next-line max-len
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         const messageData = yield Messaging.getMessageFields(messageId, ['fromuid', 'timestamp', 'system']);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (isAdminOrGlobalMod && !messageData.system) {
             return;
         }
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         const chatConfigDuration = meta.config[durationConfig];
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (chatConfigDuration && Date.now() - messageData.timestamp > chatConfigDuration * 1000) {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line max-len
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions
             throw new Error(`[[error:chat-${type}-duration-expired, ${meta.config[durationConfig]}]]`);
         }
         // The next line calls a function in a module that has not been updated to TS yet
