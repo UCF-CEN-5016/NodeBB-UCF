@@ -5,13 +5,38 @@ import meta = require('../meta');
 
 type CronJobType<T> = new (...args: any[]) => T;
 
+type ResetModule = {
+    validate: (code: string) => Promise<number>;
+    generate: (uid: string) => Promise<string>;
+    send: (email: string) => Promise<string>;
+    commit: (code: string, password: string) => Promise<void>;
+    updateExpiry: (uid: string) => Promise<void>;
+    clean: () => Promise<void>;
+    cleanByUid: (uid: string) => Promise<void>;
+}
+
+type DigestModule = {
+    execute: (payload: object) => Promise<void>;
+    getUsersInterval: (uids: string) => Promise<any[]> | Promise<boolean>;
+    getSubscribers: (interval: number) => Promise<string>;
+    send: (data: any) => Promise<void>;
+    getDeliveryTimes: (start: number, stop: number) => Promise<{users: any, count: number}>
+}
+
+type UserType = {
+    reset: ResetModule;
+    digest: DigestModule;
+    startJobs: () => void;
+    stopJobs: () => void;
+}
+
 const jobs = {};
 
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 const cronJob = cron.CronJob as CronJobType<any>;
 
-module.exports = function (User) {
+module.exports = function (User: UserType) {
     User.startJobs = function () {
         winston.verbose('[user/jobs] (Re-)starting jobs...');
 
