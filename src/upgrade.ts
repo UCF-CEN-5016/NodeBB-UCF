@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable import/no-import-module-exports */
 import path from 'path';
 import util from 'util';
@@ -63,9 +62,11 @@ Upgrade.getAll = async function () {
                 return semverCompare;
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const moduloA: TimeStamp = require(a) as TimeStamp;
             const timestampA: number = moduloA.timestamp;
 
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const moduloB: TimeStamp = require(b) as TimeStamp;
             const timestampB: number = moduloB.timestamp;
 
@@ -100,6 +101,7 @@ Upgrade.appendPluginScripts = async function (files: string[]) {
     activePlugins.forEach((plugin: string) => {
         const configPath: string = path.join(paths.nodeModules, plugin, 'plugin.json');
         try {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const pluginConfig: PluginConfig = require(configPath) as PluginConfig;
             if (
                 pluginConfig.hasOwnProperty('upgrades') &&
@@ -122,9 +124,10 @@ Upgrade.appendPluginScripts = async function (files: string[]) {
 Upgrade.check = async function () {
     // Throw 'schema-out-of-date' if not all upgrade scripts have run
     const files = await Upgrade.getAll();
-    const executed = await db.getSortedSetRange('schemaLog', 0, -1);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const executed: string[] = await db.getSortedSetRange('schemaLog', 0, -1) as string[];
     const remainder = files.filter(
-        (name) => !executed.includes(path.basename(name, '.js'))
+        (name: string) => !executed.includes(path.basename(name, '.js'))
     );
     if (remainder.length > 0) {
         throw new Error('schema-out-of-date');
@@ -134,14 +137,15 @@ Upgrade.check = async function () {
 Upgrade.run = async function () {
     console.log('\nParsing upgrade scripts... ');
 
-    const [completed, available] = await Promise.all([
-        db.getSortedSetRange('schemaLog', 0, -1),
+    const [completed, available]: [string[], string[]] = await Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        db.getSortedSetRange('schemaLog', 0, -1) as Promise<string[]>,
         Upgrade.getAll(),
     ]);
 
     let skipped = 0;
-    const queue = available.filter((cur) => {
-        const upgradeRan = completed.includes(path.basename(cur, '.js'));
+    const queue: string[] = available.filter((cur: string) => {
+        const upgradeRan: boolean = completed.includes(path.basename(cur, '.js'));
         if (upgradeRan) {
             skipped += 1;
         }
