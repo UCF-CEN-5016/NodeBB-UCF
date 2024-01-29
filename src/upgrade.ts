@@ -22,11 +22,11 @@ import { paths } from './constants';
 
 type Upgrade = {
   getAll: () => Promise<string[]>; // DONE
-  appendPluginScripts: (files: string[]) => Promise<string[]>;
-  check: () => Promise<void>;
-  run: () => Promise<void>;
+  appendPluginScripts: (files: string[]) => Promise<string[]>; // DONE
+  check: () => Promise<void>; // DONE
+  run: () => Promise<void>; // DONE
   runParticular: (names: string[]) => Promise<void>; // DONE
-  process: (files: string[], skipCount: number) => Promise<void>;
+  process: (files: string[], skipCount: number) => Promise<void>; // DONE
   incrementProgress: (value: number) => void; // DONE
   current: number;
   counter: number;
@@ -44,6 +44,12 @@ type PluginConfig = {
 type Error = {
     code: string;
     stack: unknown;
+}
+
+type Data = {
+    name: string;
+    timestamp: number;
+    method: (err: unknown, value: unknown) => void;
 }
 
 const Upgrade: Upgrade = module.exports as Upgrade;
@@ -155,7 +161,7 @@ Upgrade.run = async function () {
     await Upgrade.process(queue, skipped);
 };
 
-Upgrade.runParticular = async function (names) {
+Upgrade.runParticular = async function (names: string[]) {
     console.log('\nParsing upgrade scripts... ');
     const files: string[] = await file.walk(path.join(__dirname, './upgrades')) as string[];
     await Upgrade.appendPluginScripts(files);
@@ -163,20 +169,23 @@ Upgrade.runParticular = async function (names) {
     await Upgrade.process(upgrades, 0);
 };
 
-Upgrade.process = async function (files, skipCount) {
+Upgrade.process = async function (files: string[], skipCount: number) {
     console.log(
         `${chalk.green('OK')} | ${chalk.cyan(`${files.length} script(s) found`)}${
             skipCount > 0 ? chalk.cyan(`, ${skipCount} skipped`) : ''
         }`
     );
-    const [schemaDate, schemaLogCount] = await Promise.all([
-        db.get('schemaDate'),
-        db.sortedSetCard('schemaLog'),
+    const [schemaDate, schemaLogCount]: [number, number] = await Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        db.get('schemaDate') as Promise<number>,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        db.sortedSetCard('schemaLog') as Promise<number>,
     ]);
 
     for (const file of files) {
     /* eslint-disable no-await-in-loop */
-        const scriptExport = require(file);
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const scriptExport: Data = require(file) as Data;
         const date = new Date(scriptExport.timestamp);
         const version = path.dirname(file).split('/').pop();
         const progress = {
@@ -209,6 +218,7 @@ Upgrade.process = async function (files, skipCount) {
         ) {
             process.stdout.write(chalk.grey(' skipped\n'));
 
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             await db.sortedSetAdd(
                 'schemaLog',
                 Date.now(),
@@ -223,12 +233,14 @@ Upgrade.process = async function (files, skipCount) {
             scriptExport.method.constructor &&
       scriptExport.method.constructor.name !== 'AsyncFunction'
         ) {
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             scriptExport.method = util.promisify(scriptExport.method);
         }
 
         // Do the upgrade...
         const upgradeStart = Date.now();
         try {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             await scriptExport.method.bind({
                 progress: progress,
             })();
@@ -240,6 +252,7 @@ Upgrade.process = async function (files, skipCount) {
         process.stdout.write(chalk.green(` OK (${upgradeDuration} seconds)\n`));
 
         // Record success in schemaLog
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         await db.sortedSetAdd('schemaLog', Date.now(), path.basename(file, '.js'));
     }
 
@@ -276,4 +289,5 @@ Upgrade.incrementProgress = function (this: Upgrade, value: number) {
     }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
 require('./promisify')(Upgrade);
