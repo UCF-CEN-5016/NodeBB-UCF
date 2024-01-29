@@ -49,7 +49,7 @@ type Error = {
 type Data = {
   name: string;
   timestamp: number;
-  method: (err: unknown, value: unknown) => void;
+  method: (...args: unknown[]) => unknown;
 };
 
 const Upgrade: Upgrade = module.exports as Upgrade;
@@ -245,7 +245,6 @@ Upgrade.process = async function (files: string[], skipCount: number) {
             scriptExport.method.constructor &&
       scriptExport.method.constructor.name !== 'AsyncFunction'
         ) {
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             scriptExport.method = util.promisify(scriptExport.method);
         }
 
