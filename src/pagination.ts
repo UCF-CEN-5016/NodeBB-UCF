@@ -1,8 +1,12 @@
+// eslint-disable-next-line import/no-import-module-exports
 import qs from 'querystring';
+// eslint-disable-next-line import/no-import-module-exports
 import _ from 'lodash';
 
+// The next line calls a function in a module that has not been updated to TS yet
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 const pagination = module.exports;
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 pagination.create = function (currentPage: number, pageCount: number, queryObj: qs.ParsedUrlQueryInput) {
     if (pageCount <= 1) {
         return {
@@ -45,7 +49,7 @@ pagination.create = function (currentPage: number, pageCount: number, queryObj: 
         separator?: boolean;
     }[] = pagesToShow.map((page) => {
         queryObj.page = page;
-        return { page: page, active: page === currentPage, qs: qs.stringify(queryObj), separator: false };
+        return { page: page, active: page === currentPage, qs: qs.stringify(queryObj) };
     });
 
     for (i = pages.length - 1; i > 0; i -= 1) {
@@ -53,7 +57,7 @@ pagination.create = function (currentPage: number, pageCount: number, queryObj: 
             pages.splice(
                 i,
                 0,
-                { page: pages[i].page - 1, active: false, qs: qs.stringify(queryObj), separator: false }
+                { page: pages[i].page - 1, active: false, qs: qs.stringify(queryObj) }
             );
         } else if (pages[i].page - 1 !== pages[i - 1].page) {
             pages.splice(i, 0, {
@@ -66,7 +70,10 @@ pagination.create = function (currentPage: number, pageCount: number, queryObj: 
     }
 
     const data: {
-        rel: any[];
+        rel: {
+            rel: string;
+            href: string;
+        }[];
         prev: {
             page: number;
             active: boolean;
