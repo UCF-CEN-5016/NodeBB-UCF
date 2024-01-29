@@ -7,6 +7,7 @@ import * as utils from '../utils';
 interface Reward {
     id: number;
     condition: string;
+    rewards: any[]; // Update the type if the actual type is known
     // Add other properties from the original data structure if needed
 }
 
@@ -15,15 +16,15 @@ const rewards: {
     delete: (data: Reward) => Promise<void>;
     get: () => Promise<{
         active: Reward[];
-        conditions: any[]; // Update the type if the actual type is known
-        conditionals: any[]; // Update the type if the actual type is known
-        rewards: any[]; // Update the type if the actual type is known
+        conditions: any[]; // Replace with the actual type
+        conditionals: any[]; // Replace with the actual type
+        rewards: any[]; // Replace with the actual type
     }>;
 } = {} as any;
 
 rewards.save = async function (data: Reward[]): Promise<Reward[]> {
     async function save(data: Reward): Promise<void> {
-        if (!Object.keys(data.rewards).length) {
+        if (!data.rewards || !data.rewards.length) {
             return;
         }
         const rewardsData = data.rewards;
@@ -52,9 +53,9 @@ rewards.delete = async function (data: Reward): Promise<void> {
 
 rewards.get = async function (): Promise<{
     active: Reward[];
-    conditions: any[]; // Update the type if the actual type is known
-    conditionals: any[]; // Update the type if the actual type is known
-    rewards: any[]; // Update the type if the actual type is known
+    conditions: any[]; // Replace with the actual type
+    conditionals: any[]; // Replace with the actual type
+    rewards: any[]; // Replace with the actual type
 }> {
     return await utils.promiseParallel({
         active: getActiveRewards(),
