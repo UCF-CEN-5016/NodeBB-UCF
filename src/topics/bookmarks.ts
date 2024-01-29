@@ -6,7 +6,7 @@ const async = require('async');
 const db = require('../database');
 const user = require('../user');
 
-module.exports = function (Topics) {
+module.exports = function (Topics: { getUserBookmark: (tid: any, uid: any) => Promise<any>; getUserBookmarks: (tids: any, uid: any) => Promise<any>; setUserBookmark: (arg0: any, arg1: any, arg2: number) => any; getTopicBookmarks: (arg0: any) => any; updateTopicBookmarks: (tid: any, pids: any) => Promise<void>; getPostCount: (arg0: any) => any; }) {
     Topics.getUserBookmark = async function (tid, uid) {
         if (parseInt(uid, 10) <= 0) {
             return null;
@@ -18,7 +18,7 @@ module.exports = function (Topics) {
         if (parseInt(uid, 10) <= 0) {
             return tids.map(() => null);
         }
-        return await db.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
+        return await db.sortedSetsScore(tids.map((tid: any) => `tid:${tid}:bookmarks`), uid);
     };
 
     Topics.setUserBookmark = async function (tid, uid, index) {
@@ -32,18 +32,18 @@ module.exports = function (Topics) {
     Topics.updateTopicBookmarks = async function (tid, pids) {
         const maxIndex = await Topics.getPostCount(tid);
         const indices = await db.sortedSetRanks(`tid:${tid}:posts`, pids);
-        const postIndices = indices.map(i => (i === null ? 0 : i + 1));
+        const postIndices = indices.map((i: number) => (i === null ? 0 : i + 1));
         const minIndex = Math.min(...postIndices);
 
         const bookmarks = await Topics.getTopicBookmarks(tid);
 
-        const uidData = bookmarks.map(b => ({ uid: b.value, bookmark: parseInt(b.score, 10) }))
-            .filter(data => data.bookmark >= minIndex);
+        const uidData = bookmarks.map((b: { value: any; score: string; }) => ({ uid: b.value, bookmark: parseInt(b.score, 10) }))
+            .filter((data: { bookmark: number; }) => data.bookmark >= minIndex);
 
-        await async.eachLimit(uidData, 50, async (data) => {
+        await async.eachLimit(uidData, 50, async (data: { bookmark: number; uid: any; }) => {
             let bookmark = Math.min(data.bookmark, maxIndex);
 
-            postIndices.forEach((i) => {
+            postIndices.forEach((i: number) => {
                 if (i < data.bookmark) {
                     bookmark -= 1;
                 }
