@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable import/no-import-module-exports */
 import path from 'path';
 import util from 'util';
@@ -21,7 +22,7 @@ import { paths } from './constants';
  */
 
 type Upgrade = {
-  getAll: () => Promise<string[]>; // 1 PART NOT DONE
+  getAll: () => Promise<string[]>; // DONE
   appendPluginScripts: (files: string[]) => Promise<string[]>;
   check: () => Promise<void>;
   run: () => Promise<void>;
@@ -33,27 +34,41 @@ type Upgrade = {
   total: number;
 };
 
+type TimeStamp = {
+    timestamp: number;
+}
+
+type PluginConfig = {
+    upgrades?: string[];
+}
+
+type Error = {
+    code: string;
+    stack: unknown;
+}
+
 const Upgrade: Upgrade = module.exports as Upgrade;
 
 Upgrade.getAll = async function () {
-    let files: string[] = (await file.walk(
-        path.join(__dirname, './upgrades')
-    )) as string[];
+    let files: string[] = await file.walk(path.join(__dirname, './upgrades')) as string[];
 
     // Sort the upgrade scripts based on version
     files = files
         .filter((file: string) => path.basename(file) !== 'TEMPLATE')
         .sort((a: string, b: string) => {
-            const versionA = path.dirname(a).split(path.sep).pop();
-            const versionB = path.dirname(b).split(path.sep).pop();
-            const semverCompare = semver.compare(versionA, versionB);
+            const versionA: string = path.dirname(a).split(path.sep).pop();
+            const versionB: string = path.dirname(b).split(path.sep).pop();
+            const semverCompare: 0|1|-1 = semver.compare(versionA, versionB);
             if (semverCompare) {
                 return semverCompare;
             }
 
-            // --------------- FIX THIS LATER ---------------------
-            const timestampA = require(a).timestamp;
-            const timestampB = require(b).timestamp;
+            const moduloA: TimeStamp = require(a) as TimeStamp;
+            const timestampA: number = moduloA.timestamp;
+
+            const moduloB: TimeStamp = require(b) as TimeStamp;
+            const timestampB: number = moduloB.timestamp;
+
             return timestampA - timestampB;
         });
 
@@ -77,24 +92,27 @@ Upgrade.getAll = async function () {
     return files;
 };
 
-Upgrade.appendPluginScripts = async function (files) {
+Upgrade.appendPluginScripts = async function (files: string[]) {
     // Find all active plugins
-    const activePlugins = await plugins.getActive();
-    activePlugins.forEach((plugin) => {
-        const configPath = path.join(paths.nodeModules, plugin, 'plugin.json');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const activePlugins: string[] = await plugins.getActive() as string[];
+    activePlugins.forEach((plugin: string) => {
+        const configPath: string = path.join(paths.nodeModules, plugin, 'plugin.json');
         try {
-            const pluginConfig = require(configPath);
+            const pluginConfig: PluginConfig = require(configPath) as PluginConfig;
             if (
                 pluginConfig.hasOwnProperty('upgrades') &&
         Array.isArray(pluginConfig.upgrades)
             ) {
-                pluginConfig.upgrades.forEach((script) => {
+                pluginConfig.upgrades.forEach((script: string) => {
                     files.push(path.join(path.dirname(configPath), script));
                 });
             }
         } catch (e) {
-            if (e.code !== 'MODULE_NOT_FOUND') {
-                winston.error(e.stack);
+            const error = e as Error;
+            if (error.code !== 'MODULE_NOT_FOUND') {
+                winston.error(error.stack);
             }
         }
     });
