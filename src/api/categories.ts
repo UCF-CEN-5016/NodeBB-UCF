@@ -1,8 +1,8 @@
-import * as Categories from '../categories';
-import * as Events from '../events';
-import * as User from '../user';
-import * as Groups from '../groups';
-import * as Privileges from '../privileges';
+import * as categories from '../categories';
+import * as events from '../events';
+import * as user from '../user';
+import * as groups from '../groups';
+import * as privileges from '../privileges';
 
 interface Caller {
     uid: number;
@@ -23,7 +23,7 @@ interface PrivilegeData {
     read: boolean;
 }
 
-interface CategoriesAPI {
+interface categoriesAPI {
     get(caller: Caller, data: { cid: number }): Promise<CategoryData | null>;
     create(caller: Caller, data: CategoryData): Promise<CategoryData>;
     update(caller: Caller, data: CategoryData): Promise<void>;
@@ -32,18 +32,19 @@ interface CategoriesAPI {
     setPrivilege(caller: Caller, data: PrivilegeData): Promise<void>;
 }
 
-const categoriesAPI: CategoriesAPI = {
+const categoriesAPI: categoriesAPI = {
 
     async get(caller: Caller, data: { cid: number }): Promise<CategoryData | null> {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const [userPrivileges, category]: [PrivilegeData, CategoryData] = await Promise.all([
-            Privileges.categories.get(data.cid, caller.uid),
+        const [userprivileges, category]: [PrivilegeData, CategoryData] = await Promise.all([
+            privileges.categories.get(data.cid, caller.uid),
+
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            Categories.getCategoryData(data.cid),
+            categories.getCategoryData(data.cid),
         ]);
-        if (!category || !userPrivileges.read) {
+        if (!category || !userprivileges.read) {
             return null;
         }
         return category;
@@ -52,10 +53,11 @@ const categoriesAPI: CategoriesAPI = {
     async create(caller: Caller, data: CategoryData): Promise<CategoryData> {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-        const response: CategoryData = await Categories.create(data);
+        const response: CategoryData = categories.create(data);
+
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const categoryObjs: CategoryData[] = await Categories.getCategories([response.cid], caller.uid);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        const categoryObjs: CategoryData[] = await categories.getcategories([response.cid], caller.uid);
         return categoryObjs[0];
     },
 
@@ -65,17 +67,18 @@ const categoriesAPI: CategoriesAPI = {
         }
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        await Categories.update(data);
+        await categories.update(data);
     },
 
     async delete(caller: Caller, data: { cid: number }): Promise<void> {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-        const name: string = await Categories.getCategoryField(data.cid, 'name');
+        const name: string = await categories.getCategoryField(data.cid, 'name');
+
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        await Categories.purge(data.cid, caller.uid);
-        await Events.log({
+        await categories.purge(data.cid, caller.uid);
+        await events.log({
             type: 'category-purge',
             uid: caller.uid,
             ip: caller.ip,
@@ -88,11 +91,11 @@ const categoriesAPI: CategoriesAPI = {
         let responsePayload: string[];
 
         if (cid === 'admin') {
-            responsePayload = await Privileges.admin.list(caller.uid);
+            responsePayload = await privileges.admin.list(caller.uid);
         } else if (!parseInt(cid.toString(), 10)) {
-            responsePayload = await Privileges.global.list();
+            responsePayload = await privileges.global.list();
         } else {
-            responsePayload = await Privileges.categories.list(cid.toString());
+            responsePayload = await privileges.categories.list(cid.toString());
         }
 
         return responsePayload;
@@ -102,8 +105,8 @@ const categoriesAPI: CategoriesAPI = {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const [userExists, groupExists] = await Promise.all([
-            User.exists(data.member),
-            Groups.exists(data.member),
+            user.exists(data.member),
+            groups.exists(data.member),
         ]);
 
         if (!userExists && !groupExists) {
@@ -117,33 +120,36 @@ const categoriesAPI: CategoriesAPI = {
         if (parseInt(data.cid.toString(), 10) === 0) {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const adminPrivList = await Privileges.admin.getPrivilegeList();
+            const adminPrivList = await privileges.admin.getPrivilegeList();
+
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             const adminPrivs = privs.filter(priv => adminPrivList.includes(priv));
             if (adminPrivs.length) {
-                await Privileges.admin[type](adminPrivs, data.member);
+                await privileges.admin[type](adminPrivs, data.member);
             }
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const globalPrivList = await Privileges.global.getPrivilegeList();
+            const globalPrivList = await privileges.global.getPrivilegeList();
+
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             const globalPrivs = privs.filter(priv => globalPrivList.includes(priv));
             if (globalPrivs.length) {
-                await Privileges.global[type](globalPrivs, data.member);
+                await privileges.global[type](globalPrivs, data.member);
             }
         } else {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const categoryPrivList = await Privileges.categories.getPrivilegeList();
+            const categoryPrivList = await privileges.categories.getPrivilegeList();
+
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
-            await Privileges.categories[type](categoryPrivs, data.cid.toString(), data.member);
+            await privileges.categories[type](categoryPrivs, data.cid.toString(), data.member);
         }
 
-        await Events.log({
+        await events.log({
             uid: caller.uid,
             type: 'privilege-change',
             ip: caller.ip,
