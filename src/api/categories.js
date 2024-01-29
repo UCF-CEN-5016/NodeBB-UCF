@@ -55,7 +55,7 @@ const categoriesAPI = {
                 return category;
             }
             catch (error) {
-                console.error("Error in get function:", error);
+                console.error('Error in get function:', error);
                 throw error; // Rethrow the error to the caller
             }
         });
@@ -72,7 +72,7 @@ const categoriesAPI = {
                 return categoryObjs[0];
             }
             catch (error) {
-                console.error("Error in create function:", error);
+                console.error('Error in create function:', error);
                 throw error; // Rethrow the error to the caller
             }
         });
@@ -88,7 +88,7 @@ const categoriesAPI = {
                 yield categories.update(data);
             }
             catch (error) {
-                console.error("Error in update function:", error);
+                console.error('Error in update function:', error);
                 throw error; // Rethrow the error to the caller
             }
         });
@@ -111,7 +111,7 @@ const categoriesAPI = {
                 });
             }
             catch (error) {
-                console.error("Error in delete function:", error);
+                console.error('Error in delete function:', error);
                 throw error; // Rethrow the error to the caller
             }
         });
@@ -132,7 +132,7 @@ const categoriesAPI = {
                 return responsePayload;
             }
             catch (error) {
-                console.error("Error in getPrivileges function:", error);
+                console.error('Error in getPrivileges function:', error);
                 throw error; // Rethrow the error to the caller
             }
         });
@@ -158,8 +158,9 @@ const categoriesAPI = {
                     // The next line calls a function in a module that has not been updated to TS yet
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const adminPrivList = yield privileges.admin.getPrivilegeList();
+                    // Disabling lint tests this way for next few lines, doing it normally was more than 120 length
                     // The next line calls a function in a module that has not been updated to TS yet
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+                    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
                     const adminPrivs = privs.filter(priv => adminPrivList.includes(priv));
                     if (adminPrivs.length) {
                         yield privileges.admin[type](adminPrivs, data.member);
@@ -168,7 +169,6 @@ const categoriesAPI = {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const globalPrivList = yield privileges.global.getPrivilegeList();
                     // The next line calls a function in a module that has not been updated to TS yet
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
                     const globalPrivs = privs.filter(priv => globalPrivList.includes(priv));
                     if (globalPrivs.length) {
                         yield privileges.global[type](globalPrivs, data.member);
@@ -179,10 +179,10 @@ const categoriesAPI = {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const categoryPrivList = yield privileges.categories.getPrivilegeList();
                     // The next line calls a function in a module that has not been updated to TS yet
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
                     const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
                     yield privileges.categories[type](categoryPrivs, data.cid.toString(), data.member);
                 }
+                /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access  */
                 yield events.log({
                     uid: caller.uid,
                     type: 'privilege-change',
@@ -194,7 +194,7 @@ const categoriesAPI = {
                 });
             }
             catch (error) {
-                console.error("Error in setPrivilege function:", error);
+                console.error('Error in setPrivilege function:', error);
                 throw error; // Rethrow the error to the caller
             }
         });

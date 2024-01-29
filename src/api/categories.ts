@@ -50,27 +50,27 @@ const categoriesAPI: categoriesAPI = {
             }
             return category;
         } catch (error) {
-            console.error("Error in get function:", error);
+            console.error('Error in get function:', error);
             throw error; // Rethrow the error to the caller
         }
     },
-    
+
     async create(caller: Caller, data: CategoryData): Promise<CategoryData> {
         try {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
             const response: CategoryData = categories.create(data);
-    
+
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
             const categoryObjs: CategoryData[] = await categories.getcategories([response.cid], caller.uid);
             return categoryObjs[0];
         } catch (error) {
-            console.error("Error in create function:", error);
+            console.error('Error in create function:', error);
             throw error; // Rethrow the error to the caller
         }
     },
-    
+
     async update(caller: Caller, data: CategoryData): Promise<void> {
         try {
             if (!data) {
@@ -80,11 +80,11 @@ const categoriesAPI: categoriesAPI = {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             await categories.update(data);
         } catch (error) {
-            console.error("Error in update function:", error);
+            console.error('Error in update function:', error);
             throw error; // Rethrow the error to the caller
         }
     },
-    
+
     async delete(caller: Caller, data: { cid: number }): Promise<void> {
         try {
             // The next line calls a function in a module that has not been updated to TS yet
@@ -102,11 +102,11 @@ const categoriesAPI: categoriesAPI = {
                 name: name,
             });
         } catch (error) {
-            console.error("Error in delete function:", error);
+            console.error('Error in delete function:', error);
             throw error; // Rethrow the error to the caller
         }
     },
-    
+
     async getPrivileges(caller: Caller, cid: string | number): Promise<string[]> {
         try {
             let responsePayload: string[];
@@ -119,11 +119,11 @@ const categoriesAPI: categoriesAPI = {
             }
             return responsePayload;
         } catch (error) {
-            console.error("Error in getPrivileges function:", error);
+            console.error('Error in getPrivileges function:', error);
             throw error; // Rethrow the error to the caller
         }
     },
-    
+
     async setPrivilege(caller: Caller, data: PrivilegeData): Promise<void> {
         try {
             // The next line calls a function in a module that has not been updated to TS yet
@@ -132,7 +132,7 @@ const categoriesAPI: categoriesAPI = {
                 user.exists(data.member),
                 groups.exists(data.member),
             ]);
-    
+
             if (!userExists && !groupExists) {
                 throw new Error('[[error:no-user-or-group]]');
             }
@@ -145,9 +145,11 @@ const categoriesAPI: categoriesAPI = {
                 // The next line calls a function in a module that has not been updated to TS yet
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const adminPrivList = await privileges.admin.getPrivilegeList();
-    
+
+                // Disabling lint tests this way for next few lines, doing it normally was more than 120 length
+
                 // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+                /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
                 const adminPrivs = privs.filter(priv => adminPrivList.includes(priv));
                 if (adminPrivs.length) {
                     await privileges.admin[type](adminPrivs, data.member);
@@ -155,9 +157,9 @@ const categoriesAPI: categoriesAPI = {
                 // The next line calls a function in a module that has not been updated to TS yet
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const globalPrivList = await privileges.global.getPrivilegeList();
-    
+
                 // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
                 const globalPrivs = privs.filter(priv => globalPrivList.includes(priv));
                 if (globalPrivs.length) {
                     await privileges.global[type](globalPrivs, data.member);
@@ -166,13 +168,13 @@ const categoriesAPI: categoriesAPI = {
                 // The next line calls a function in a module that has not been updated to TS yet
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const categoryPrivList = await privileges.categories.getPrivilegeList();
-    
+
                 // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
                 const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
                 await privileges.categories[type](categoryPrivs, data.cid.toString(), data.member);
             }
-    
+            /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access  */
             await events.log({
                 uid: caller.uid,
                 type: 'privilege-change',
@@ -183,7 +185,7 @@ const categoriesAPI: categoriesAPI = {
                 target: data.member,
             });
         } catch (error) {
-            console.error("Error in setPrivilege function:", error);
+            console.error('Error in setPrivilege function:', error);
             throw error; // Rethrow the error to the caller
         }
     },
