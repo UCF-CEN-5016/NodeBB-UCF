@@ -1,35 +1,35 @@
-'use strict';
+
 
 import * as plugins from '../plugins';
 import * as db from '../database';
 import * as utils from '../utils';
 
-interface Reward {
+interface RewardData {
     id: number;
     condition: string;
-    rewards: any[]; // Update the type if the actual type is known
-    // Add other properties from the original data structure if needed
+    rewards: Record<string, any>; // Adjust the type according to the structure of your rewards data
+    // Add other properties as needed
 }
 
 const rewards: {
-    save: (data: Reward[]) => Promise<Reward[]>;
-    delete: (data: Reward) => Promise<void>;
+    save: (data: RewardData[]) => Promise<RewardData[]>;
+    delete: (data: RewardData) => Promise<void>;
     get: () => Promise<{
-        active: Reward[];
-        conditions: any[]; // Replace with the actual type
-        conditionals: any[]; // Replace with the actual type
-        rewards: any[]; // Replace with the actual type
+        active: RewardData[];
+        conditions: any[]; // Adjust the type accordingly
+        conditionals: any[]; // Adjust the type accordingly
+        rewards: any[]; // Adjust the type accordingly
     }>;
 } = {} as any;
 
-rewards.save = async function (data: Reward[]): Promise<Reward[]> {
-    async function save(data: Reward): Promise<void> {
-        if (!data.rewards || !data.rewards.length) {
+rewards.save = async function (data: RewardData[]) {
+    async function save(data: RewardData) {
+        if (!Object.keys(data.rewards).length) {
             return;
         }
         const rewardsData = data.rewards;
         delete data.rewards;
-        if (!parseInt(data.id.toString(), 10)) {
+        if (!parseInt(data.id, 10)) {
             data.id = await db.incrObjectField('global', 'rewards:id');
         }
         await rewards.delete(data);
@@ -38,12 +38,12 @@ rewards.save = async function (data: Reward[]): Promise<Reward[]> {
         await db.setObject(`rewards:id:${data.id}:rewards`, rewardsData);
     }
 
-    await Promise.all(data.map((reward) => save(reward)));
+    await Promise.all(data.map(data => save(data)));
     await saveConditions(data);
     return data;
 };
 
-rewards.delete = async function (data: Reward): Promise<void> {
+rewards.delete = async function (data: RewardData) {
     await Promise.all([
         db.setRemove('rewards:list', data.id),
         db.delete(`rewards:id:${data.id}`),
@@ -51,12 +51,7 @@ rewards.delete = async function (data: Reward): Promise<void> {
     ]);
 };
 
-rewards.get = async function (): Promise<{
-    active: Reward[];
-    conditions: any[]; // Replace with the actual type
-    conditionals: any[]; // Replace with the actual type
-    rewards: any[]; // Replace with the actual type
-}> {
+rewards.get = async function () {
     return await utils.promiseParallel({
         active: getActiveRewards(),
         conditions: plugins.hooks.fire('filter:rewards.conditions', []),
@@ -65,7 +60,7 @@ rewards.get = async function (): Promise<{
     });
 };
 
-async function saveConditions(data: Reward[]): Promise<void> {
+async function saveConditions(data: RewardData[]) {
     const rewardsPerCondition: Record<string, number[]> = {};
     await db.delete('conditions:active');
     const conditions: string[] = [];
@@ -78,11 +73,11 @@ async function saveConditions(data: Reward[]): Promise<void> {
 
     await db.setAdd('conditions:active', conditions);
 
-    await Promise.all(Object.keys(rewardsPerCondition).map((c) => db.setAdd(`condition:${c}:rewards`, rewardsPerCondition[c])));
+    await Promise.all(Object.keys(rewardsPerCondition).map(c => db.setAdd(`condition:${c}:rewards`, rewardsPerCondition[c])));
 }
 
-async function getActiveRewards(): Promise<Reward[]> {
-    async function load(id: number): Promise<Reward | null> {
+async function getActiveRewards(): Promise<RewardData[]> {
+    async function load(id: number) {
         const [main, rewards] = await Promise.all([
             db.getObject(`rewards:id:${id}`),
             db.getObject(`rewards:id:${id}:rewards`),
@@ -91,12 +86,12 @@ async function getActiveRewards(): Promise<Reward[]> {
             main.disabled = main.disabled === 'true';
             main.rewards = rewards;
         }
-        return main;
+        return main as RewardData;
     }
 
-    const rewardsList: number[] = await db.getSetMembers('rewards:list');
-    const rewardData: (Reward | null)[] = await Promise.all(rewardsList.map((id) => load(id)));
-    return rewardData.filter((reward): reward is Reward => reward !== null);
+    const rewardsList = await db.getSetMembers('rewards:list');
+    const rewardData = await Promise.all(rewardsList.map(id => load(id)));
+    return rewardData.filter(Boolean) as RewardData[];
 }
 
 require('../promisify')(rewards);
