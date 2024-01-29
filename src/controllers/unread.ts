@@ -14,68 +14,6 @@ interface CustomRequest extends Request {
     uid: string;
 }
 
-interface Pagnation {
-    prev: {
-        page: number,
-        active: boolean
-    },
-    next: {
-        page: number,
-        active: boolean
-    },
-    first: {
-        page: number,
-        active: boolean
-    },
-    last: {
-        page: number,
-        active: boolean
-    },
-    rel: [],
-    pages: [],
-    currentPage: number,
-    pageCount: number,
-}
-
-interface UnreadTopics {
-    showSelect: boolean,
-    nextStart: number,
-    topics: [],
-    topicCount: number,
-    title: string,
-    breadcrumbs:[{
-        text: string,
-        url: string,
-    }],
-    pageCount: number,
-    pagination: Pagnation,
-    showTopicTools: boolean,
-    allCategoriesUrl: string,
-    // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    selectedCategory: any,
-    // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    selectedCids: any,
-    selectCategoryLabel: string,
-    selectCategoryIcon: string,
-    showCategorySelectLabel: boolean,
-    filters: [{
-        name: string,
-        url: string,
-        selected: boolean,
-        filter: string,
-        icon: string,
-    }],
-    selectedFilter: {
-        name: string,
-        url: string,
-        selected: boolean,
-        filter: string,
-        icon: string,
-    },
-}
-
 export async function get(req: CustomRequest, res: Response) {
     const { cid } = req.query;
     const filter = req.query.filter || '';
@@ -105,15 +43,15 @@ export async function get(req: CustomRequest, res: Response) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-plus-operands
     const stop = start + userSettings.topicsPerPage - 1;
     // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const data: UnreadTopics = await topics.getUnreadTopics({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const data = await topics.getUnreadTopics({
         cid: cid,
         uid: req.uid,
         start: start,
         stop: stop,
         filter: filter,
         query: req.query,
-    }) as UnreadTopics;
+    });
 
     const isDisplayedAsHome = !(req.originalUrl.startsWith(`${relative_path}/api/unread`) ||
     req.originalUrl.startsWith(`${relative_path}/unread`));
@@ -124,6 +62,8 @@ export async function get(req: CustomRequest, res: Response) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         data.title = (meta.config.homePageTitle || '[[pages:home]]') as string;
     } else {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         data.title = '[[pages:unread]]';
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -133,32 +73,57 @@ export async function get(req: CustomRequest, res: Response) {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.pageCount = Math.max(1, Math.ceil(data.topicCount / userSettings.topicsPerPage));
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.pagination = pagination.create(page, data.pageCount, req.query);
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     helpers.addLinkTags({ url: 'unread', res: req.res, tags: data.pagination.rel });
 
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (userSettings.usePagination && (page < 1 || page > data.pageCount)) {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         (req.query.page as unknown as number) = Math.max(1, Math.min(data.pageCount, page));
         return helpers.redirect(res, `/unread?${querystring.stringify(req.query as ParsedUrlQueryInput)}`);
     }
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.showSelect = true;
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.showTopicTools = isPrivileged;
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.allCategoriesUrl = `${baseUrl}${helpers.buildQueryString(req.query, 'cid', '')}`;
     // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
     data.selectedCategory = categoryData.selectedCategory;
     // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
     data.selectedCids = categoryData.selectedCids;
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.selectCategoryLabel = '[[unread:mark_as_read]]';
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.selectCategoryIcon = 'fa-inbox';
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.showCategorySelectLabel = true;
     // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     data.filters = helpers.buildFilters(baseUrl, filter, req.query);
+    // The next line calls a function in a module that has not been updated to TS yet
+    /* eslint-disable-next-line
+        @typescript-eslint/no-unsafe-assignment,
+        @typescript-eslint/no-unsafe-member-access,
+        @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-return */
     data.selectedFilter = data.filters.find(filter => filter && filter.selected);
-
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     res.render('unread', data);
 }
 
