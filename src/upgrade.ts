@@ -34,28 +34,30 @@ type Upgrade = {
 };
 
 type TimeStamp = {
-    timestamp: number;
-}
+  timestamp: number;
+};
 
 type PluginConfig = {
-    upgrades?: string[];
-}
+  upgrades?: string[];
+};
 
 type Error = {
-    code: string;
-    stack: unknown;
-}
+  code: string;
+  stack: unknown;
+};
 
 type Data = {
-    name: string;
-    timestamp: number;
-    method: (err: unknown, value: unknown) => void;
-}
+  name: string;
+  timestamp: number;
+  method: (err: unknown, value: unknown) => void;
+};
 
 const Upgrade: Upgrade = module.exports as Upgrade;
 
 Upgrade.getAll = async function () {
-    let files: string[] = await file.walk(path.join(__dirname, './upgrades')) as string[];
+    let files: string[] = (await file.walk(
+        path.join(__dirname, './upgrades')
+    )) as string[];
 
     // Sort the upgrade scripts based on version
     files = files
@@ -63,7 +65,7 @@ Upgrade.getAll = async function () {
         .sort((a: string, b: string) => {
             const versionA: string = path.dirname(a).split(path.sep).pop();
             const versionB: string = path.dirname(b).split(path.sep).pop();
-            const semverCompare: 0|1|-1 = semver.compare(versionA, versionB);
+            const semverCompare: 0 | 1 | -1 = semver.compare(versionA, versionB);
             if (semverCompare) {
                 return semverCompare;
             }
@@ -103,9 +105,13 @@ Upgrade.appendPluginScripts = async function (files: string[]) {
     // Find all active plugins
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const activePlugins: string[] = await plugins.getActive() as string[];
+    const activePlugins: string[] = (await plugins.getActive()) as string[];
     activePlugins.forEach((plugin: string) => {
-        const configPath: string = path.join(paths.nodeModules, plugin, 'plugin.json');
+        const configPath: string = path.join(
+            paths.nodeModules,
+            plugin,
+            'plugin.json'
+        );
         try {
             // eslint-disable-next-line @typescript-eslint/no-var-requires
             const pluginConfig: PluginConfig = require(configPath) as PluginConfig;
@@ -131,7 +137,11 @@ Upgrade.check = async function () {
     // Throw 'schema-out-of-date' if not all upgrade scripts have run
     const files = await Upgrade.getAll();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const executed: string[] = await db.getSortedSetRange('schemaLog', 0, -1) as string[];
+    const executed: string[] = (await db.getSortedSetRange(
+        'schemaLog',
+        0,
+        -1
+    )) as string[];
     const remainder = files.filter(
         (name: string) => !executed.includes(path.basename(name, '.js'))
     );
@@ -144,9 +154,9 @@ Upgrade.run = async function () {
     console.log('\nParsing upgrade scripts... ');
 
     const [completed, available]: [string[], string[]] = await Promise.all([
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        db.getSortedSetRange('schemaLog', 0, -1) as Promise<string[]>,
-        Upgrade.getAll(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    db.getSortedSetRange('schemaLog', 0, -1) as Promise<string[]>,
+    Upgrade.getAll(),
     ]);
 
     let skipped = 0;
@@ -163,7 +173,9 @@ Upgrade.run = async function () {
 
 Upgrade.runParticular = async function (names: string[]) {
     console.log('\nParsing upgrade scripts... ');
-    const files: string[] = await file.walk(path.join(__dirname, './upgrades')) as string[];
+    const files: string[] = (await file.walk(
+        path.join(__dirname, './upgrades')
+    )) as string[];
     await Upgrade.appendPluginScripts(files);
     const upgrades = files.filter((file: string) => names.includes(path.basename(file, '.js')));
     await Upgrade.process(upgrades, 0);
@@ -176,15 +188,15 @@ Upgrade.process = async function (files: string[], skipCount: number) {
         }`
     );
     const [schemaDate, schemaLogCount]: [number, number] = await Promise.all([
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        db.get('schemaDate') as Promise<number>,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        db.sortedSetCard('schemaLog') as Promise<number>,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    db.get('schemaDate') as Promise<number>,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    db.sortedSetCard('schemaLog') as Promise<number>,
     ]);
 
     for (const file of files) {
     /* eslint-disable no-await-in-loop */
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
         const scriptExport: Data = require(file) as Data;
         const date = new Date(scriptExport.timestamp);
         const version = path.dirname(file).split('/').pop();
