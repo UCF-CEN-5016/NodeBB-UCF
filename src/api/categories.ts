@@ -1,8 +1,8 @@
-import categories from '../categories';
-import events from '../events';
-import user from '../user';
-import groups from '../groups';
-import privileges from '../privileges';
+import * as Categories from '../categories';
+import * as Events from '../events';
+import * as User from '../user';
+import * as Groups from '../groups';
+import * as Privileges from '../privileges';
 
 interface Caller {
     uid: number;
@@ -15,117 +15,140 @@ interface CategoryData {
     read: boolean;
 }
 
-interface SetPrivilegeData {
-    cid: number;
+interface PrivilegeData {
     member: string;
-    privilege: string | string[]; // Consider making this more specific
+    privilege: string | string[];
     set: boolean;
+    cid: number;
+    read: boolean;
 }
 
 interface CategoriesAPI {
     get(caller: Caller, data: { cid: number }): Promise<CategoryData | null>;
     create(caller: Caller, data: CategoryData): Promise<CategoryData>;
-    update(caller: Caller, data: { [cid: string]: CategoryData }): Promise<void>;
+    update(caller: Caller, data: CategoryData): Promise<void>;
     delete(caller: Caller, data: { cid: number }): Promise<void>;
     getPrivileges(caller: Caller, cid: string | number): Promise<string[]>;
-    setPrivilege(caller: Caller, data: SetPrivilegeData): Promise<void>;
+    setPrivilege(caller: Caller, data: PrivilegeData): Promise<void>;
 }
 
 const categoriesAPI: CategoriesAPI = {
+
     async get(caller: Caller, data: { cid: number }): Promise<CategoryData | null> {
-        const userPrivilegesPromise = privileges.categories.get(data.cid, caller.uid);
-        const categoryPromise = await privileges.categories.get(data.cid); // eslint-disable-line
-
-        const [userPrivileges, category] = await Promise.all([ // eslint-disable-line
-            userPrivilegesPromise,
-            categoryPromise,
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const [userPrivileges, category]: [PrivilegeData, CategoryData] = await Promise.all([
+            Privileges.categories.get(data.cid, caller.uid),
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            Categories.getCategoryData(data.cid),
         ]);
-
-        if (!category || !userPrivileges?.read) { // eslint-disable-line
+        if (!category || !userPrivileges.read) {
             return null;
         }
-
-        return category; // eslint-disable-line
+        return category;
     },
 
     async create(caller: Caller, data: CategoryData): Promise<CategoryData> {
-        const response = await categories.create(data); // eslint-disable-line
-        const categoryObjs = await categories.getCategories([response.cid], caller.uid); // eslint-disable-line
-        return categoryObjs[0]; // eslint-disable-line
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        const response: CategoryData = await Categories.create(data);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const categoryObjs: CategoryData[] = await Categories.getCategories([response.cid], caller.uid);
+        return categoryObjs[0];
     },
 
-    async update(caller: Caller, data: { [cid: string]: CategoryData }): Promise<void> {
+    async update(caller: Caller, data: CategoryData): Promise<void> {
         if (!data) {
-            throw new Error('Invalid data provided for update');
+            throw new Error('[[error:invalid-data]]');
         }
-        await categories.update(data); // eslint-disable-line
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        await Categories.update(data);
     },
 
     async delete(caller: Caller, data: { cid: number }): Promise<void> {
-        const name = await categories.getCategoryField(data.cid, 'name'); // eslint-disable-line
-        await categories.purge(data.cid, caller.uid); // eslint-disable-line
-        await events.log({
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        const name: string = await Categories.getCategoryField(data.cid, 'name');
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        await Categories.purge(data.cid, caller.uid);
+        await Events.log({
             type: 'category-purge',
             uid: caller.uid,
             ip: caller.ip,
             cid: data.cid,
-            name: name, // eslint-disable-line
+            name: name,
         });
     },
 
     async getPrivileges(caller: Caller, cid: string | number): Promise<string[]> {
+        let responsePayload: string[];
+
         if (cid === 'admin') {
-            return privileges.admin.list(caller.uid);
-        } else if (typeof cid !== 'number') {
-            return privileges.global.list();
+            responsePayload = await Privileges.admin.list(caller.uid);
+        } else if (!parseInt(cid.toString(), 10)) {
+            responsePayload = await Privileges.global.list();
+        } else {
+            responsePayload = await Privileges.categories.list(cid.toString());
         }
-        return privileges.categories.list(cid);
+
+        return responsePayload;
     },
 
-    async setPrivilege(caller: Caller, data: SetPrivilegeData): Promise<void> {
+    async setPrivilege(caller: Caller, data: PrivilegeData): Promise<void> {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const [userExists, groupExists] = await Promise.all([
-            user.exists(data.member) as boolean,
-            groups.exists(data.member) as boolean,
+            User.exists(data.member),
+            Groups.exists(data.member),
         ]);
 
         if (!userExists && !groupExists) {
-            throw new Error('User or group does not exist');
+            throw new Error('[[error:no-user-or-group]]');
         }
-
-        const privs: string[] = Array.isArray(data.privilege) ? data.privilege : [data.privilege];
+        const privs = Array.isArray(data.privilege) ? data.privilege : [data.privilege];
         const type = data.set ? 'give' : 'rescind';
-
         if (!privs.length) {
-            throw new Error('Invalid privilege data');
+            throw new Error('[[error:invalid-data]]');
         }
-
-        if (data.cid === 0) {
-            const adminPrivList = await privileges.admin.getPrivilegeList() as string[];
+        if (parseInt(data.cid.toString(), 10) === 0) {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const adminPrivList = await Privileges.admin.getPrivilegeList();
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             const adminPrivs = privs.filter(priv => adminPrivList.includes(priv));
-
             if (adminPrivs.length) {
-                await privileges.admin[type](adminPrivs, data.member);
+                await Privileges.admin[type](adminPrivs, data.member);
             }
-
-            const globalPrivList = await privileges.global.getPrivilegeList() as string[];
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const globalPrivList = await Privileges.global.getPrivilegeList();
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             const globalPrivs = privs.filter(priv => globalPrivList.includes(priv));
-
             if (globalPrivs.length) {
-                await privileges.global[type](globalPrivs, data.member);
+                await Privileges.global[type](globalPrivs, data.member);
             }
         } else {
-            const categoryPrivList = await privileges.categories.getPrivilegeList() as string[];
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const categoryPrivList = await Privileges.categories.getPrivilegeList();
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
-
-            await privileges.categories[type](categoryPrivs, data.cid, data.member);
+            await Privileges.categories[type](categoryPrivs, data.cid.toString(), data.member);
         }
 
-        await events.log({
+        await Events.log({
             uid: caller.uid,
             type: 'privilege-change',
             ip: caller.ip,
-            privilege: Array.isArray(data.privilege) ? data.privilege.join(',') : data.privilege,
-            cid: data.cid,
+            privilege: Array.isArray(data.privilege) ? data.privilege.toString() : data.privilege,
+            cid: data.cid.toString(),
             action: data.set ? 'grant' : 'rescind',
             target: data.member,
         });
