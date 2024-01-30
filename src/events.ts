@@ -106,6 +106,7 @@ events.types = [
 async function deleteEvents(eids: []) {
     const keys = eids.map(eid => `event:${String(eid)}`);
     // eslint-disable-next-line max-len
+    // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const eventData: Array<{ type: string }> = await db.getObjectsFields(keys, [
         'type',
@@ -114,8 +115,10 @@ async function deleteEvents(eids: []) {
         ['events:time'].concat(eventData.map(e => `events:time:${e.type}`))
     );
     await Promise.all([
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         db.deleteAll(keys),
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         db.sortedSetRemove(sets, eids),
     ]);
@@ -139,6 +142,7 @@ async function addUserData(
 
     const [isAdmin, userData]: [boolean[], object[]] = await Promise.all([
     user.isAdministrator(uids) as Promise<boolean[]>,
+    // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call,
     user.getUsersFields(uids, ['username', 'userslug', 'picture']) as Promise<
       object[]
@@ -146,6 +150,7 @@ async function addUserData(
     ]);
 
     const map: Record<string, object | string> = {};
+    // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     userData.forEach(
         (user: { isAdmin: boolean; uid: string }, index: number) => {
@@ -176,12 +181,14 @@ events.log = async function (data: {
     data.eid = eid;
 
     await Promise.all([
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         db.sortedSetsAdd(
             ['events:time', `events:time:${data.type}`],
             data.timestamp,
             eid
         ),
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         db.setObject(`event:${eid}`, data),
     ]);
@@ -206,6 +213,7 @@ events.addUserData = async function (
 
     const [isAdmin, userData]: [boolean[], object[]] = await Promise.all([
     user.isAdministrator(uids) as Promise<boolean[]>,
+    // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call,
     user.getUsersFields(uids, ['username', 'userslug', 'picture']) as Promise<
       object[]
@@ -213,11 +221,11 @@ events.addUserData = async function (
     ]);
 
     const map: Record<string, object | string> = {};
+    // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     userData.forEach(
         (user: { isAdmin: boolean; uid: string }, index: number) => {
             user.isAdmin = isAdmin[index];
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             map[user.uid] = user;
         }
     );
@@ -241,8 +249,10 @@ events.deleteEvents = async function (eids: []) {
         ['events:time'].concat(eventData.map(e => `events:time:${e.type}`))
     );
     await Promise.all([
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         db.deleteAll(keys),
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         db.sortedSetRemove(sets, eids),
     ]);
@@ -264,6 +274,7 @@ events.getEvents = async function (
     }
 
     // eslint-disable-next-line max-len
+    // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const eids = await db.getSortedSetRevRangeByScore(
         `events:time${filter ? `:${filter}` : ''}`,
@@ -280,6 +291,7 @@ events.getEvents = async function (
     timestamp: string;
     type: string,
     text: string;
+    // The next line calls a function in a module that has not been updated to TS yet
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   } | null> = await db.getObjects(eids.map((eid: string) => `event:${eid}`));
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -296,7 +308,7 @@ events.getEvents = async function (
         const e = utils.merge(event);
         e.eid = undefined;
         e.uid = undefined;
-        e.type = undefined as string; // change back to undefined if tests are not working
+        e.type = undefined as string;
         e.ip = undefined;
         e.user = undefined;
         event.jsonString = JSON.stringify(e, null, 4);
@@ -309,7 +321,6 @@ events.deleteAll = async function () {
     await batch.processSortedSet(
         'events:time',
         async (eids: []) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             await deleteEvents(eids);
         },
         { alwaysStartAt: 0, batch: 500 }

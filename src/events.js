@@ -91,14 +91,17 @@ function deleteEvents(eids) {
     return __awaiter(this, void 0, void 0, function* () {
         const keys = eids.map(eid => `event:${String(eid)}`);
         // eslint-disable-next-line max-len
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const eventData = yield database_1.default.getObjectsFields(keys, [
             'type',
         ]);
         const sets = lodash_1.default.uniq(['events:time'].concat(eventData.map(e => `events:time:${e.type}`)));
         yield Promise.all([
+            // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             database_1.default.deleteAll(keys),
+            // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             database_1.default.sortedSetRemove(sets, eids),
         ]);
@@ -112,10 +115,12 @@ function addUserData(eventsData, field, objectName) {
         }
         const [isAdmin, userData] = yield Promise.all([
             user_1.default.isAdministrator(uids),
+            // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call,
             user_1.default.getUsersFields(uids, ['username', 'userslug', 'picture']),
         ]);
         const map = {};
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         userData.forEach((user, index) => {
             user.isAdmin = isAdmin[index];
@@ -139,8 +144,10 @@ events.log = function (data) {
         data.timestamp = Date.now();
         data.eid = eid;
         yield Promise.all([
+            // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             database_1.default.sortedSetsAdd(['events:time', `events:time:${data.type}`], data.timestamp, eid),
+            // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             database_1.default.setObject(`event:${eid}`, data),
         ]);
@@ -155,14 +162,15 @@ events.addUserData = function (eventsData, field, objectName) {
         }
         const [isAdmin, userData] = yield Promise.all([
             user_1.default.isAdministrator(uids),
+            // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call,
             user_1.default.getUsersFields(uids, ['username', 'userslug', 'picture']),
         ]);
         const map = {};
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         userData.forEach((user, index) => {
             user.isAdmin = isAdmin[index];
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             map[user.uid] = user;
         });
         eventsData.forEach((event) => {
@@ -183,8 +191,10 @@ events.deleteEvents = function (eids) {
         ]);
         const sets = lodash_1.default.uniq(['events:time'].concat(eventData.map(e => `events:time:${e.type}`)));
         yield Promise.all([
+            // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             database_1.default.deleteAll(keys),
+            // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             database_1.default.sortedSetRemove(sets, eids),
         ]);
@@ -200,6 +210,7 @@ events.getEvents = function (filter, start, stop, from, to) {
             to = Date.now();
         }
         // eslint-disable-next-line max-len
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const eids = yield database_1.default.getSortedSetRevRangeByScore(`events:time${filter ? `:${filter}` : ''}`, start, stop - start + 1, to, from);
         // eslint-disable-next-line max-len
@@ -219,7 +230,7 @@ events.getEvents = function (filter, start, stop, from, to) {
             const e = utils_1.default.merge(event);
             e.eid = undefined;
             e.uid = undefined;
-            e.type = undefined; // change back to undefined if tests are not working
+            e.type = undefined;
             e.ip = undefined;
             e.user = undefined;
             event.jsonString = JSON.stringify(e, null, 4);
@@ -231,7 +242,6 @@ events.getEvents = function (filter, start, stop, from, to) {
 events.deleteAll = function () {
     return __awaiter(this, void 0, void 0, function* () {
         yield batch_1.default.processSortedSet('events:time', (eids) => __awaiter(this, void 0, void 0, function* () {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             yield deleteEvents(eids);
         }), { alwaysStartAt: 0, batch: 500 });
     });
