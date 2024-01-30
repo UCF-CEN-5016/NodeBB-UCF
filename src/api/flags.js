@@ -35,54 +35,83 @@ flagsApi.create = (caller, data) => __awaiter(this, void 0, void 0, function* ()
     return flagObj;
 });
 flagsApi.update = (caller, data) => __awaiter(this, void 0, void 0, function* () {
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const allowed = yield user.isPrivileged(caller.uid);
     if (!allowed) {
         throw new Error('[[error:no-privileges]]');
     }
     const { flagId } = data;
     delete data.flagId;
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     yield flags.update(flagId, caller.uid, data);
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
     return yield flags.getHistory(flagId);
 });
 flagsApi.appendNote = (caller, data) => __awaiter(this, void 0, void 0, function* () {
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const allowed = yield user.isPrivileged(caller.uid);
     if (!allowed) {
         throw new Error('[[error:no-privileges]]');
     }
     if (data.datetime && data.flagId) {
         try {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
             const note = yield flags.getNote(data.flagId, data.datetime);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             if (note.uid !== caller.uid) {
                 throw new Error('[[error:no-privileges]]');
             }
         }
         catch (e) {
             // Okay if not does not exist in database
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             if (e.message !== '[[error:invalid-data]]') {
                 throw e;
             }
         }
     }
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     yield flags.appendNote(data.flagId, caller.uid, data.note, data.datetime);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [notes, history] = yield Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         flags.getNotes(data.flagId),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         flags.getHistory(data.flagId),
     ]);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { notes: notes, history: history };
 });
 flagsApi.deleteNote = (caller, data) => __awaiter(this, void 0, void 0, function* () {
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
     const note = yield flags.getNote(data.flagId, data.datetime);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (note.uid !== caller.uid) {
         throw new Error('[[error:no-privileges]]');
     }
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     yield flags.deleteNote(data.flagId, data.datetime);
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
     yield flags.appendHistory(data.flagId, caller.uid, {
         notes: '[[flags:note-deleted]]',
         datetime: Date.now(),
     });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [notes, history] = yield Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         flags.getNotes(data.flagId),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         flags.getHistory(data.flagId),
     ]);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { notes: notes, history: history };
 });
