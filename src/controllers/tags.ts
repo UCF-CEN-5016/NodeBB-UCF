@@ -1,7 +1,9 @@
-'use strict';
 
+import { Request, Response } from 'express';
 import validator from 'validator';
 import nconf from 'nconf';
+
+import { toString } from 'lodash';
 
 import meta from '../meta';
 import user from '../user';
@@ -12,15 +14,14 @@ import pagination from '../pagination';
 import utils from '../utils';
 import helpers from './helpers';
 
-import { Request, Response } from 'express';
 
 export const tagsController: any = {};
 
 
 tagsController.getTag = async function (req: Request, res: Response): Promise<void> {
     const tag = validator.escape(utils.cleanUpTag(req.params.tag, meta.config.maximumTagLength));
-    const page = parseInt(req.query.page, 10) || 1;
-    const cid: number[] | undefined = Array.isArray(req.query.cid) ? req.query.cid : req.query.cid ? [req.query.cid] : undefined;
+    const page : any = (req.query.page, 10) || 1;
+    const cid: any[] =  Array.isArray(req.query.cid) ? req.query.cid : req.query.cid ? [req.query.cid] : undefined;
 
     const templateData: any = {
         topics: [],
@@ -30,10 +31,10 @@ tagsController.getTag = async function (req: Request, res: Response): Promise<vo
     };
 
     const [settings, cids, categoryData, isPrivileged] = await Promise.all([
-        user.getSettings(req.uid),
-        cid || categories.getCidsByPrivilege('categories:cid', req.uid, 'topics:read'),
+        user.getSettings(req.query.uid),
+        cid || categories.getCidsByPrivilege('categories:cid', req.query.uid, 'topics:read'),
         helpers.getSelectedCategory(cid),
-        user.isPrivileged(req.uid),
+        user.isPrivileged(req.query.uid),
     ]);
 
     const start = Math.max(0, (page - 1) * settings.topicsPerPage);
@@ -44,7 +45,7 @@ tagsController.getTag = async function (req: Request, res: Response): Promise<vo
         topics.getTagTidsByCids(tag, cids, start, stop),
     ]);
 
-    templateData.topics = await topics.getTopics(tids, req.uid);
+    templateData.topics = await topics.getTopics(tids, req.query.uid);
     templateData.showSelect = isPrivileged;
     templateData.showTopicTools = isPrivileged;
     templateData.allCategoriesUrl = `tags/${tag}${helpers.buildQueryString(req.query, 'cid', '')}`;
@@ -72,9 +73,9 @@ tagsController.getTag = async function (req: Request, res: Response): Promise<vo
 };
 
 tagsController.getTags = async function (req: Request, res: Response): Promise<void> {
-    const cids = await categories.getCidsByPrivilege('categories:cid', req.uid, 'topics:read');
+    const cids = await categories.getCidsByPrivilege('categories:cid', req.query.uid, 'topics:read');
     const [canSearch, tags] = await Promise.all([
-        privileges.global.can('search:tags', req.uid),
+        privileges.global.can('search:tags', req.query.uid),
         topics.getCategoryTagsData(cids, 0, 99),
     ]);
 
