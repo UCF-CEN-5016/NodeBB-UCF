@@ -4,6 +4,7 @@ import utils = require('../utils');
 
 type Condition = string;
 
+
 type Reward = {
     id: string;
     rewards: Record<string, string>;
