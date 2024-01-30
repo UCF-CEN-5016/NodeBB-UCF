@@ -19,7 +19,9 @@ module.exports = function (Categories) {
     };
     Categories.isIgnored = function (cids, uid) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(parseInt(uid, 10) > 0)) {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            if (!(parseInt(uid.toString(), 10) > 0)) {
                 return cids.map(() => false);
             }
             const states = yield Categories.getWatchState(cids, uid);
@@ -28,35 +30,32 @@ module.exports = function (Categories) {
     };
     Categories.getWatchState = function (cids, uid) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(parseInt(uid, 10) > 0)) {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            if (!(parseInt(uid.toString(), 10) > 0)) {
                 return cids.map(() => Categories.watchStates.notwatching);
             }
             if (!Array.isArray(cids) || !cids.length) {
                 return [];
             }
             const keys = cids.map(cid => `cid:${cid}:uid:watch:state`);
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const [userSettings, states] = yield Promise.all([
                 // The next line calls a function in a module that has not been updated to TS yet
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 user.getSettings(uid),
                 // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                // eslint-disable-next-line max-len
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 db.sortedSetsScore(keys, uid),
             ]);
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line max-len
-            // eslint-disable-next-line  @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            return states.map((state, index) => state || Categories.watchStates[userSettings[index].categoryWatchState]);
+            return states.map(state => state || Categories.watchStates[userSettings.categoryWatchState]);
         });
     };
     Categories.getIgnorers = function (cid, start, stop) {
         return __awaiter(this, void 0, void 0, function* () {
             const count = (stop === -1) ? -1 : (stop - start + 1);
             // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line max-len
-            // eslint-disable-next-line  @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             return yield db.getSortedSetRevRangeByScore(`cid:${cid}:uid:watch:state`, start, count, Categories.watchStates.ignoring, Categories.watchStates.ignoring);
         });
     };
@@ -69,19 +68,14 @@ module.exports = function (Categories) {
     };
     Categories.getUidsWatchStates = function (cid, uids) {
         return __awaiter(this, void 0, void 0, function* () {
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const [userSettings, states] = yield Promise.all([
                 // The next line calls a function in a module that has not been updated to TS yet
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 user.getMultipleUserSettings(uids),
                 // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 db.sortedSetScores(`cid:${cid}:uid:watch:state`, uids),
             ]);
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line max-len
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
             return states.map((state, index) => state || Categories.watchStates[userSettings[index].categoryWatchState]);
         });
     };
