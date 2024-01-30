@@ -1,11 +1,19 @@
-import nconf from "nconf";
-import winston from "winston";
-import validator from "validator";
-import translator from "../translator";
-import plugins from "../plugins";
-import middleware from "../middleware";
-import middlewareHelpers from "../middleware";
-import helpers from "./helpers";
+// eslint-disable-next-line import/no-import-module-exports
+import nconf from 'nconf';
+// eslint-disable-next-line import/no-import-module-exports
+import winston from 'winston';
+// eslint-disable-next-line import/no-import-module-exports
+import validator from 'validator';
+// eslint-disable-next-line import/no-import-module-exports
+import translator from '../translator';
+// eslint-disable-next-line import/no-import-module-exports
+import plugins from '../plugins';
+// eslint-disable-next-line import/no-import-module-exports
+import middleware from '../middleware';
+// eslint-disable-next-line import/no-import-module-exports
+import middlewareHelpers from '../middleware/helpers';
+// eslint-disable-next-line import/no-import-module-exports
+import helpers from './helpers';
 
 exports.handleURIErrors = async function handleURIErrors(err, req, res, next) {
     // Handle cases where malformed URIs are passed in

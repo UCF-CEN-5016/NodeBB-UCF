@@ -12,14 +12,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// eslint-disable-next-line import/no-import-module-exports
 const nconf_1 = __importDefault(require("nconf"));
+// eslint-disable-next-line import/no-import-module-exports
 const winston_1 = __importDefault(require("winston"));
+// eslint-disable-next-line import/no-import-module-exports
 const validator_1 = __importDefault(require("validator"));
+// eslint-disable-next-line import/no-import-module-exports
 const translator_1 = __importDefault(require("../translator"));
+// eslint-disable-next-line import/no-import-module-exports
 const plugins_1 = __importDefault(require("../plugins"));
+// eslint-disable-next-line import/no-import-module-exports
 const middleware_1 = __importDefault(require("../middleware"));
-const middleware_2 = __importDefault(require("../middleware"));
-const helpers_1 = __importDefault(require("./helpers"));
+// eslint-disable-next-line import/no-import-module-exports
+const helpers_1 = __importDefault(require("../middleware/helpers"));
+// eslint-disable-next-line import/no-import-module-exports
+const helpers_2 = __importDefault(require("./helpers"));
 exports.handleURIErrors = function handleURIErrors(err, req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         // Handle cases where malformed URIs are passed in
@@ -81,14 +89,14 @@ exports.handleErrors = function handleErrors(err, req, res, next) {
                         status = 400;
                         err.message = yield translator_1.default.translate(err.message);
                     }
-                    return helpers_1.default.formatApiResponse(status, res, err);
+                    return helpers_2.default.formatApiResponse(status, res, err);
                 }
                 winston_1.default.error(`${req.method} ${req.originalUrl}\n${err.stack}`);
                 res.status(status || 500);
                 const data = {
                     path: validator_1.default.escape(path),
                     error: validator_1.default.escape(String(err.message)),
-                    bodyClass: middleware_2.default.buildBodyClass(req, res),
+                    bodyClass: helpers_1.default.buildBodyClass(req, res),
                 };
                 if (res.locals.isAPI) {
                     res.json(data);
