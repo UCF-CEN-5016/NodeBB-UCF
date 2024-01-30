@@ -70,10 +70,10 @@ server.on('connection', (conn) => {
     });
 });
 
-exports.destroy = function (callback) {
+exports.destroy = function (callback: () => void) {
     server.close(callback);
     for (const connection of Object.values(connections)) {
-        connection.destroy();
+        (connection as any).destroy();
     }
 };
 
@@ -186,13 +186,25 @@ function setupExpressApp(app) {
     toobusy.interval(meta.config.eventLoopInterval);
 }
 
-function setupHelmet(app) {
-    const options = {
+interface HelmetOptions {
+    contentSecurityPolicy: boolean;
+    crossOriginOpenerPolicy: { policy: any; };
+    crossOriginResourcePolicy: { policy: any; };
+    referrerPolicy: { policy: string; };
+    crossOriginEmbedderPolicy?: boolean | { policy: any; };
+    hsts?: {
+        maxAge: any;
+        includeSubDomains: boolean;
+        preload: boolean;
+    };
+}
+
+function setupHelmet(app: any) {
+    const options: HelmetOptions = {
         contentSecurityPolicy: false, // defaults are too restrive and break plugins that load external assets... 🔜
         crossOriginOpenerPolicy: { policy: meta.config['cross-origin-opener-policy'] },
         crossOriginResourcePolicy: { policy: meta.config['cross-origin-resource-policy'] },
         referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-        crossOriginEmbedderPolicy: { policy: 'require-corp' },
     };
 
     if (!meta.config['cross-origin-embedder-policy']) {
