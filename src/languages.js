@@ -83,5 +83,4 @@ Languages.userTimeagoCode = async function (userLang) {
     }
     return '';
 };
-
 require('./promisify')(Languages);
