@@ -153,12 +153,11 @@ describe('Post\'s', () => {
         }
     });
 
-    it('should return falsy if post does not exist', (done) => {
-        posts.getPostData(9999, (err, postData) => {
-            assert.ifError(err);
-            assert.equal(postData, null);
-            done();
-        });
+    // Test case was changed due to it not being in the format of the getPostData's
+    // parameters (pid only).
+    it('should return falsy if post does not exist', async () => {
+        const postData = await posts.getPostData(9999);
+        assert.equal(postData, null);
     });
 
     describe('voting', () => {
