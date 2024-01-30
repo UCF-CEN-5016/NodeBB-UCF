@@ -85,7 +85,7 @@ export async function get(req: CustomRequest, res: Response) {
     if (userSettings.usePagination && (page < 1 || page > data.pageCount)) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-        (req.query.page as unknown as number) = Math.max(1, Math.min(data.pageCount, page));
+        req.query.page = (Math.max(1, Math.min(data.pageCount, page))).toString();
         return helpers.redirect(res, `/unread?${querystring.stringify(req.query as ParsedUrlQueryInput)}`);
     }
     // The next line calls a function in a module that has not been updated to TS yet

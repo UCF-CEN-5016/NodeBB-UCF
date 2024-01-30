@@ -88,7 +88,7 @@ function get(req, res) {
         if (userSettings.usePagination && (page < 1 || page > data.pageCount)) {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-            req.query.page = Math.max(1, Math.min(data.pageCount, page));
+            req.query.page = (Math.max(1, Math.min(data.pageCount, page))).toString();
             return helpers_1.default.redirect(res, `/unread?${querystring_1.default.stringify(req.query)}`);
         }
         // The next line calls a function in a module that has not been updated to TS yet
