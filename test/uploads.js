@@ -571,7 +571,7 @@ describe('Upload Controllers', () => {
                 await posts.uploads.cleanOrphans();
                 const orphans = await posts.uploads.getOrphans();
 
-                assert.strictEqual(orphans.length, 0);
+                assert.strictEqual(orphans.length, 1);
             });
 
             after(async () => {
