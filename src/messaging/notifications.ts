@@ -1,4 +1,4 @@
-/* 
+/*
 Had to suppress almost every line containing 'async', 'await', or 'Messaging' as
 any attempt I made to infer the return types caused errors
 */
