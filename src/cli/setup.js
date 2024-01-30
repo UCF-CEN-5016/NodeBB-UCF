@@ -29,7 +29,7 @@ function setup(initConfig) {
         console.log('\nThis looks like a new installation, so you\'ll have to answer a few questions about your environment before we can proceed.');
         console.log('Press enter to accept the default setting (shown in brackets).');
         install_1.default.values = initConfig;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const data = yield install_1.default.setup();
         let configFile = constants_1.paths.config;
         if (nconf_1.default.get('config')) {
@@ -39,6 +39,15 @@ function setup(initConfig) {
         if (!nconf_1.default.get('skip-build')) {
             yield build_1.default.buildAll();
         }
+        // const separator = '     ';
+        // if (process.stdout.columns > 10) {
+        //     if (process.stdout.columns > 10) {
+        //         let x = 0;
+        //         while (x < process.stdout.columns - 10) {
+        //             x += 1;
+        //         }
+        //     }
+        // }
         let separator = '     ';
         if (process.stdout.columns > 10) {
             for (let x = 0, cols = process.stdout.columns - 10; x < cols; x += 1) {
@@ -49,9 +58,7 @@ function setup(initConfig) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         if (data.hasOwnProperty('password')) {
             console.log('An administrative user was automatically created for you:');
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             console.log(`    Username: ${data.username}`);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             console.log(`    Password: ${data.password}`);
             console.log('');
         }

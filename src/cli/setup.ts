@@ -30,15 +30,12 @@ interface SetupConfig {
 
 export async function setup(initConfig: InitConfig) {
     winston.info('NodeBB Setup Triggered via Command Line');
-
     console.log(`\nWelcome to NodeBB v${pkg.version}!`);
-    console.log(
-        '\nThis looks like a new installation, so you\'ll have to answer a few questions about your environment before we can proceed.',
-    );
+    console.log('\nThis looks like a new installation, so you\'ll have to answer a few questions about your environment before we can proceed.');
     console.log('Press enter to accept the default setting (shown in brackets).');
 
     installModule.values = initConfig;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const data: SetupConfig = await installModule.setup() as SetupConfig;
     let configFile = paths.config;
     if (nconf.get('config')) {
@@ -51,26 +48,34 @@ export async function setup(initConfig: InitConfig) {
         await build.buildAll();
     }
 
+    // const separator = '     ';
+    // if (process.stdout.columns > 10) {
+    //     if (process.stdout.columns > 10) {
+    //         let x = 0;
+    //         while (x < process.stdout.columns - 10) {
+    //             x += 1;
+    //         }
+    //     }
+    // }
+
     let separator = '     ';
     if (process.stdout.columns > 10) {
         for (let x = 0, cols = process.stdout.columns - 10; x < cols; x += 1) {
             separator += '=';
         }
     }
+
     console.log(`\n${separator}\n`);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     if (data.hasOwnProperty('password')) {
         console.log('An administrative user was automatically created for you:');
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         console.log(`    Username: ${data.username}`);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         console.log(`    Password: ${data.password}`);
         console.log('');
     }
-    console.log(
-        'NodeBB Setup Completed. Run "./nodebb start" to manually start your NodeBB server.',
-    );
+
+    console.log('NodeBB Setup Completed. Run "./nodebb start" to manually start your NodeBB server.');
 
     // If I am a child process, notify the parent of the returned data before exiting (useful for notifying
     // hosts of auto-generated username/password during headless setups)
