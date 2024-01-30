@@ -31,7 +31,7 @@ interface Events {
             timestamp: string;
           }[], string: string, objectName: string) => Promise<{ [field: string]: string; jsonString: string; timestampISO: string; timestamp: string; }[]>;
       deleteEvents: (eids: []) => Promise<void>;
-      getEvents: (filter: string, start: number, stop: number, from: number, to: number) => Promise<{ jsonString: string; timestampISO: string; timestamp: string; }[]>;
+      getEvents: (filter: number, start: number, stop: number, from: number, to: number) => Promise<{ jsonString: string; timestampISO: string; timestamp: string; type: string; text: string; }[]>;
       deleteAll: () => Promise<void>;
 }
 
@@ -249,7 +249,7 @@ events.deleteEvents = async function (eids: []) {
 };
 
 events.getEvents = async function (
-    filter: string,
+    filter: number,
     start: number,
     stop: number,
     from: number,
@@ -278,6 +278,8 @@ events.getEvents = async function (
     jsonString: string;
     timestampISO: string;
     timestamp: string;
+    type: string,
+    text: string;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   } | null> = await db.getObjects(eids.map((eid: string) => `event:${eid}`));
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -290,10 +292,11 @@ events.getEvents = async function (
                 event[key] = validator.escape(String(event[key] || ''));
             }
         });
+        console.log('The Event in question: ', event);
         const e = utils.merge(event);
         e.eid = undefined;
         e.uid = undefined;
-        e.type = undefined;
+        e.type = undefined as string; // change back to undefined if tests are not working
         e.ip = undefined;
         e.user = undefined;
         event.jsonString = JSON.stringify(e, null, 4);

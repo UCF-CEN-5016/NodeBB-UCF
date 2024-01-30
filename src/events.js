@@ -215,10 +215,11 @@ events.getEvents = function (filter, start, stop, from, to) {
                     event[key] = validator.escape(String(event[key] || ''));
                 }
             });
+            console.log('The Event in question: ', event);
             const e = utils_1.default.merge(event);
             e.eid = undefined;
             e.uid = undefined;
-            e.type = undefined;
+            e.type = undefined; // change back to undefined if tests are not working
             e.ip = undefined;
             e.user = undefined;
             event.jsonString = JSON.stringify(e, null, 4);
