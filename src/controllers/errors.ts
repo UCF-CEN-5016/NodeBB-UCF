@@ -1,13 +1,11 @@
-'use strict';
-
-const nconf = require('nconf');
-const winston = require('winston');
-const validator = require('validator');
-const translator = require('../translator');
-const plugins = require('../plugins');
-const middleware = require('../middleware');
-const middlewareHelpers = require('../middleware/helpers');
-const helpers = require('./helpers');
+import nconf from "nconf";
+import winston from "winston";
+import validator from "validator";
+import translator from "../translator";
+import plugins from "../plugins";
+import middleware from "../middleware";
+import middlewareHelpers from "../middleware";
+import helpers from "./helpers";
 
 exports.handleURIErrors = async function handleURIErrors(err, req, res, next) {
     // Handle cases where malformed URIs are passed in
