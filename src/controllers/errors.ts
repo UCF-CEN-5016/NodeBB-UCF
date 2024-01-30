@@ -15,7 +15,7 @@ import middlewareHelpers from '../middleware/helpers';
 // eslint-disable-next-line import/no-import-module-exports
 import helpers from './helpers';
 
-exports.handleURIErrors = async function handleURIErrors(err, req, res, next) {
+exports.handleURIErrors = async function handleURIErrors(err: Error, req: any, res: any, next: any) {
     // Handle cases where malformed URIs are passed in
     if (err instanceof URIError) {
         const cleanPath = req.path.replace(new RegExp(`^${nconf.get('relative_path')}`), '');
