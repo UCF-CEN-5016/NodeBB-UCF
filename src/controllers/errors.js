@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.handleURIErrors = void 0;
 // eslint-disable-next-line import/no-import-module-exports
 const nconf_1 = __importDefault(require("nconf"));
 // eslint-disable-next-line import/no-import-module-exports
@@ -28,7 +29,7 @@ const middleware_1 = __importDefault(require("../middleware"));
 const helpers_1 = __importDefault(require("../middleware/helpers"));
 // eslint-disable-next-line import/no-import-module-exports
 const helpers_2 = __importDefault(require("./helpers"));
-exports.handleURIErrors = function handleURIErrors(err, req, res, next) {
+function handleURIErrors(err, req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         // Handle cases where malformed URIs are passed in
         if (err instanceof URIError) {
@@ -58,7 +59,9 @@ exports.handleURIErrors = function handleURIErrors(err, req, res, next) {
             next(err);
         }
     });
-};
+}
+exports.handleURIErrors = handleURIErrors;
+;
 // this needs to have four arguments or express treats it as `(req, res, next)`
 // don't remove `next`!
 exports.handleErrors = function handleErrors(err, req, res, next) {
