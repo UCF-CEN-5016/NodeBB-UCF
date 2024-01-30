@@ -27,7 +27,7 @@ async function isConditionActive(condition) {
     return await db.isSetMember('conditions:active', condition);
 }
 
-async function getIDsByCondition(condition) {sdf
+async function getIDsByCondition(condition) {
     return await db.getSetMembers(`condition:${condition}:rewards`);
 }
 
