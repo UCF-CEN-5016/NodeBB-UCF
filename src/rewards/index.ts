@@ -1,7 +1,7 @@
-const util = require('util');
+import util = require('util');
 
-const db = require('../database');
-const plugins = require('../plugins');
+import db = require('../database');
+import plugins = require('../plugins');
 
 const rewards = module.exports;
 
