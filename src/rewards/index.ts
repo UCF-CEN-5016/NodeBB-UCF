@@ -81,7 +81,7 @@ async function checkCondition(reward: Reward, method: () => unknown): Promise<bo
     return bool;
 }
 
-async function giveRewards(uid: string, rewards: Reward[]) {
+async function giveRewards(uid: string, rewards: Reward[]): Promise<void> {
     const rewardData = await getRewardsByRewardData(rewards);
     for (let i = 0; i < rewards.length; i++) {
         // The next line calls a function in a module that has not been updated to TS yet
