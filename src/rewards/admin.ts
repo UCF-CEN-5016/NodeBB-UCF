@@ -1,6 +1,8 @@
 import * as plugins from '../plugins';
 import * as db from '../database';
 import * as utils from '../utils';
+npm install mongoose
+
 
 interface RewardData {
   id?: string;
