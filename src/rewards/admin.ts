@@ -1,4 +1,3 @@
-
 import plugins = require('../plugins');
 import db = require('../database');
 import utils = require('../utils');
