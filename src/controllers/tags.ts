@@ -17,23 +17,25 @@ import { Request, Response } from 'express';
 export const tagsController: any = {};
 
 
-tagsController.getTag = async function (req, res) {
+tagsController.getTag = async function (req: Request, res: Response): Promise<void> {
     const tag = validator.escape(utils.cleanUpTag(req.params.tag, meta.config.maximumTagLength));
     const page = parseInt(req.query.page, 10) || 1;
-    const cid = Array.isArray(req.query.cid) || !req.query.cid ? req.query.cid : [req.query.cid];
+    const cid: number[] | undefined = Array.isArray(req.query.cid) ? req.query.cid : req.query.cid ? [req.query.cid] : undefined;
 
-    const templateData = {
+    const templateData: any = {
         topics: [],
         tag: tag,
         breadcrumbs: helpers.buildBreadcrumbs([{ text: '[[tags:tags]]', url: '/tags' }, { text: tag }]),
         title: `[[pages:tag, ${tag}]]`,
     };
+
     const [settings, cids, categoryData, isPrivileged] = await Promise.all([
         user.getSettings(req.uid),
         cid || categories.getCidsByPrivilege('categories:cid', req.uid, 'topics:read'),
         helpers.getSelectedCategory(cid),
         user.isPrivileged(req.uid),
     ]);
+
     const start = Math.max(0, (page - 1) * settings.topicsPerPage);
     const stop = start + settings.topicsPerPage - 1;
 
