@@ -1,9 +1,6 @@
-
-import { Request, Response } from 'express';
 import validator from 'validator';
 import nconf from 'nconf';
-
-import { toString } from 'lodash';
+import { Request, Response } from 'express';
 
 import meta from '../meta';
 import user from '../user';
@@ -14,76 +11,87 @@ import pagination from '../pagination';
 import utils from '../utils';
 import helpers from './helpers';
 
+interface TemplateData {
+    topics: any[];
+    tag: string;
+    breadcrumbs: any[];
+    title: string;
+    showSelect?: boolean;
+    showTopicTools?: boolean;
+    allCategoriesUrl?: string;
+    selectedCategory?: any;
+    selectedCids?: any[];
+    pagination?: any;
+    rssFeedUrl?: string;
+    'feeds:disableRSS'?: boolean;
+}
 
-export const tagsController: any = {};
+interface CategoryData {
+    selectedCategory: any;
+    selectedCids: any[];
+}
 
+interface Settings {
+    topicsPerPage: number;
+}
 
-tagsController.getTag = async function (req: Request, res: Response): Promise<void> {
-    const tag = validator.escape(utils.cleanUpTag(req.params.tag, meta.config.maximumTagLength));
-    const page : any = (req.query.page, 10) || 1;
-    const cid: any[] =  Array.isArray(req.query.cid) ? req.query.cid : req.query.cid ? [req.query.cid] : undefined;
+export const tagsController = {
+    getTag: async function (req: Request, res: Response): Promise<void> {
+        const tag: string = validator.escape(utils.cleanUpTag(req.params.tag, meta.config.maximumTagLength));
+        const page: number = parseInt(req.query.page as string, 10) || 1;
+        const cid: string | string[] = Array.isArray(req.query.cid) ? req.query.cid : req.query.cid ? [req.query.cid as string] : [];
 
-    const templateData: any = {
-        topics: [],
-        tag: tag,
-        breadcrumbs: helpers.buildBreadcrumbs([{ text: '[[tags:tags]]', url: '/tags' }, { text: tag }]),
-        title: `[[pages:tag, ${tag}]]`,
-    };
+        const templateData: TemplateData = {
+            topics: [],
+            tag: tag,
+            breadcrumbs: helpers.buildBreadcrumbs([{ text: '[[tags:tags]]', url: '/tags' }, { text: tag }]),
+            title: `[[pages:tag, ${tag}]]`,
+        };
 
-    const [settings, cids, categoryData, isPrivileged] = await Promise.all([
-        user.getSettings(req.query.uid),
-        cid || categories.getCidsByPrivilege('categories:cid', req.query.uid, 'topics:read'),
-        helpers.getSelectedCategory(cid),
-        user.isPrivileged(req.query.uid),
-    ]);
+        const [settings, cids, categoryData, isPrivileged] = await Promise.all([
+            user.getSettings(req.uid as number),
+            cid.length > 0 ? Promise.resolve(cid) : categories.getCidsByPrivilege('categories:cid', req.uid as number, 'topics:read'),
+            helpers.getSelectedCategory(cid),
+            user.isPrivileged(req.uid as number),
+        ]) as [Settings, string[], CategoryData, boolean];
 
-    const start = Math.max(0, (page - 1) * settings.topicsPerPage);
-    const stop = start + settings.topicsPerPage - 1;
+        const start: number = Math.max(0, (page - 1) * settings.topicsPerPage);
+        const stop: number = start + settings.topicsPerPage - 1;
 
-    const [topicCount, tids] = await Promise.all([
-        topics.getTagTopicCount(tag, cids),
-        topics.getTagTidsByCids(tag, cids, start, stop),
-    ]);
+        const [topicCount, tids] = await Promise.all([
+            topics.getTagTopicCount(tag, cids),
+            topics.getTagTidsByCids(tag, cids, start, stop),
+        ]) as [number, number[]];
 
-    templateData.topics = await topics.getTopics(tids, req.query.uid);
-    templateData.showSelect = isPrivileged;
-    templateData.showTopicTools = isPrivileged;
-    templateData.allCategoriesUrl = `tags/${tag}${helpers.buildQueryString(req.query, 'cid', '')}`;
-    templateData.selectedCategory = categoryData.selectedCategory;
-    templateData.selectedCids = categoryData.selectedCids;
-    topics.calculateTopicIndices(templateData.topics, start);
-    res.locals.metaTags = [
-        {
-            name: 'title',
-            content: tag,
-        },
-        {
-            property: 'og:title',
-            content: tag,
-        },
-    ];
+        templateData.topics = await topics.getTopics(tids, req.uid as number);
+        templateData.showSelect = isPrivileged;
+        templateData.showTopicTools = isPrivileged;
+        templateData.allCategoriesUrl = `tags/${tag}${helpers.buildQueryString(req.query, 'cid', '')}`;
+        templateData.selectedCategory = categoryData.selectedCategory;
+        templateData.selectedCids = categoryData.selectedCids;
+        topics.calculateTopicIndices(templateData.topics, start);
 
-    const pageCount = Math.max(1, Math.ceil(topicCount / settings.topicsPerPage));
-    templateData.pagination = pagination.create(page, pageCount, req.query);
-    helpers.addLinkTags({ url: `tags/${tag}`, res: req.res, tags: templateData.pagination.rel });
+        const pageCount: number = Math.max(1, Math.ceil(topicCount / settings.topicsPerPage));
+        templateData.pagination = pagination.create(page, pageCount, req.query);
 
-    templateData['feeds:disableRSS'] = meta.config['feeds:disableRSS'];
-    templateData.rssFeedUrl = `${nconf.get('relative_path')}/tags/${tag}.rss`;
-    res.render('tag', templateData);
-};
+        templateData['feeds:disableRSS'] = meta.config['feeds:disableRSS'];
+        templateData.rssFeedUrl = `${nconf.get('relative_path')}/tags/${tag}.rss`;
+        res.render('tag', templateData);
+    },
 
-tagsController.getTags = async function (req: Request, res: Response): Promise<void> {
-    const cids = await categories.getCidsByPrivilege('categories:cid', req.query.uid, 'topics:read');
-    const [canSearch, tags] = await Promise.all([
-        privileges.global.can('search:tags', req.query.uid),
-        topics.getCategoryTagsData(cids, 0, 99),
-    ]);
+    getTags: async function (req: Request, res: Response): Promise<void> {
+        const cids: string[] = await categories.getCidsByPrivilege('categories:cid', req.uid as number, 'topics:read');
+        const [canSearch, tags] = await Promise.all([
+            privileges.global.can('search:tags', req.uid as number),
+            topics.getCategoryTagsData(cids, 0, 99),
+        ]) as [boolean, any[]];
 
-    res.render('tags', {
-        tags: tags.filter(Boolean),
-        displayTagSearch: canSearch,
-        nextStart: 100,
-        breadcrumbs: helpers.buildBreadcrumbs([{ text: '[[tags:tags]]' }]),
-        title: '[[pages:tags]]',
-    });
+        res.render('tags', {
+            tags: tags.filter(Boolean),
+            displayTagSearch: canSearch,
+            nextStart: 100,
+            breadcrumbs: helpers.buildBreadcrumbs([{ text: '[[tags:tags]]' }]),
+            title: '[[pages:tags]]',
+        });
+    }
 };
