@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,27 +8,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-// remember we might have to change the test database port back to the original.
 const user = require('../user');
 const flags = require('../flags');
 const flagsApi = module.exports;
-flagsApi.create = (caller, data) => __awaiter(void 0, void 0, void 0, function* () {
+flagsApi.create = (caller, data) => __awaiter(this, void 0, void 0, function* () {
     const required = ['type', 'id', 'reason'];
     if (!required.every(prop => !!data[prop])) {
         throw new Error('[[error:invalid-data]]');
     }
     const { type, id, reason } = data;
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     yield flags.validate({
         uid: caller.uid,
         type: type,
         id: id,
     });
-    // string, int, int, string
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
     const flagObj = yield flags.create(type, id, caller.uid, reason);
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     flags.notify(flagObj, caller.uid);
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return flagObj;
 });
-flagsApi.update = (caller, data) => __awaiter(void 0, void 0, void 0, function* () {
+flagsApi.update = (caller, data) => __awaiter(this, void 0, void 0, function* () {
     const allowed = yield user.isPrivileged(caller.uid);
     if (!allowed) {
         throw new Error('[[error:no-privileges]]');
@@ -38,7 +44,7 @@ flagsApi.update = (caller, data) => __awaiter(void 0, void 0, void 0, function* 
     yield flags.update(flagId, caller.uid, data);
     return yield flags.getHistory(flagId);
 });
-flagsApi.appendNote = (caller, data) => __awaiter(void 0, void 0, void 0, function* () {
+flagsApi.appendNote = (caller, data) => __awaiter(this, void 0, void 0, function* () {
     const allowed = yield user.isPrivileged(caller.uid);
     if (!allowed) {
         throw new Error('[[error:no-privileges]]');
@@ -64,7 +70,7 @@ flagsApi.appendNote = (caller, data) => __awaiter(void 0, void 0, void 0, functi
     ]);
     return { notes: notes, history: history };
 });
-flagsApi.deleteNote = (caller, data) => __awaiter(void 0, void 0, void 0, function* () {
+flagsApi.deleteNote = (caller, data) => __awaiter(this, void 0, void 0, function* () {
     const note = yield flags.getNote(data.flagId, data.datetime);
     if (note.uid !== caller.uid) {
         throw new Error('[[error:no-privileges]]');

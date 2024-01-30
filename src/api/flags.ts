@@ -1,8 +1,8 @@
-'use strict';
+// 'use strict';
 
-// remember we might have to change the test database port back to the original.
 const user = require('../user');
 const flags = require('../flags');
+
 
 const flagsApi = module.exports;
 
@@ -14,16 +14,24 @@ flagsApi.create = async (caller: { uid: number }, data: { type: string; id: numb
 
     const { type, id, reason }: { type: string; id: number; reason: string } = data;
 
-
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     await flags.validate({
-        uid: caller.uid, // number
+        uid: caller.uid,
         type: type,
         id: id,
     });
-    // string, int, int, string
+
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
     const flagObj = await flags.create(type, id, caller.uid, reason);
+
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     flags.notify(flagObj, caller.uid);
 
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return flagObj;
 };
 
