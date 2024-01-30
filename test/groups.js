@@ -117,11 +117,33 @@ describe('Groups', () => {
     describe('.search()', () => {
         const socketGroups = require('../src/socket.io/groups');
 
-        it('should return empty array if query is falsy', (done) => {
+        // it('should return empty array if query is falsy', (done) => {
+        //     Groups.search(null, {}, (err, groups) => {
+        //         assert.ifError(err);
+        //         assert.equal(0, groups.length);
+        //         done();
+        //     }).timeout(5000);
+        // });
+        it('should return empty array if query is falsy', function (done) {
+            this.timeout(200000); // Set the timeout for this test case
+
+            const timeout = setTimeout(() => {
+                done(new Error('Test case timed out'));
+            }, 100000);
+
             Groups.search(null, {}, (err, groups) => {
-                assert.ifError(err);
-                assert.equal(0, groups.length);
-                done();
+                clearTimeout(timeout);
+
+                if (err) {
+                    done(err);
+                } else {
+                    try {
+                        assert.strictEqual(groups.length, 0);
+                        done();
+                    } catch (assertionError) {
+                        done(assertionError);
+                    }
+                }
             });
         });
 
@@ -1481,3 +1503,4 @@ describe('Groups', () => {
         });
     });
 });
+

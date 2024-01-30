@@ -1,26 +1,32 @@
 // import { User } from '../user';
 // import * as user from '../user';
+
 // // import * as db from '../database';
+
 // interface Group {
 //     slug: string;
 //     createtime: number;
 //     memberCount: number;
 //     hidden?: boolean;
 // }
+
 // interface SearchOptions {
 //     hideEphemeralGroups?: boolean;
 //     showMembers?: boolean;
 //     filterHidden?: boolean;
 //     sort?: string; // adjust the type according to your needs
 // }
+
 // interface SearchResult {
 //     users: User[];
 // }
+
 // interface User {
 //     uid?: string;
 //     isOwner?: boolean;
 //     // Other user properties
 // }
+
 // interface Groups {
 //     [key: string]: unknown; // Add more specific types based on your actual implementation
 //     ephemeralGroups: string[];
@@ -35,6 +41,7 @@
 //         isOwners(uids: string[], groupName: string): Promise<string[]>;
 //     };
 // }
+
 // export = function (Groups: Groups) {
 //     Groups.search = async function (query: string, options: SearchOptions) {
 //         if (!query) {
@@ -49,6 +56,7 @@
 //             name !== Groups.BANNED_USERS &&
 //             !Groups.isPrivilegeGroup(name));
 //         groupNames = groupNames.slice(0, 100);
+
 //         let groupsData: Group[];
 //         if (options.showMembers) {
 //             groupsData = await Groups.getGroupsAndMembers(groupNames);
@@ -66,6 +74,7 @@
 //         }
 //         return Groups.sort(options.sort, groupsData);
 //     };
+
 //     Groups.sort = function (strategy: string, groups: Group[]) {
 //         switch (strategy) {
 //         case 'count': groups.sort((a, b) => a
@@ -76,8 +85,10 @@
 //         case 'alpha': // intentional fall-through
 //         default: groups.sort((a, b) => a.slug.localeCompare(b.slug));
 //         }
+
 //         return groups;
 //     };
+
 //     Groups.searchMembers = async function (data: { query?: string; groupName: string; uid: string }) {
 //         if (!data.query) {
 //             // The next line calls a function in a module that has not been updated to TS yet
@@ -98,6 +109,7 @@
 //         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 //         const uids: string[] = results
 //             .users.map((user: User | null) => user && user.uid).filter(Boolean); // Replace any with specific type
+
 //         const isOwners = await Groups.ownership.isOwners(uids, data.groupName);
 //         // The next line calls a function in a module that has not been updated to TS yet
 //         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -118,6 +130,10 @@
 //             }
 //             return 0;
 //         });
+
 //         return results;
 //     };
 // };
+
+
+
