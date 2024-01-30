@@ -71,7 +71,7 @@ tagsController.getTag = async function (req: Request, res: Response): Promise<vo
     res.render('tag', templateData);
 };
 
-tagsController.getTags = async function (req, res) {
+tagsController.getTags = async function (req: Request, res: Response): Promise<void> {
     const cids = await categories.getCidsByPrivilege('categories:cid', req.uid, 'topics:read');
     const [canSearch, tags] = await Promise.all([
         privileges.global.can('search:tags', req.uid),
