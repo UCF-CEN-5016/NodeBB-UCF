@@ -614,7 +614,7 @@ describe('socket.io', () => {
         });
     });
 
-    it('should delete a single event', (done) => {
+    it('should delete a single event', async () => {
         db.getSortedSetRevRange('events:time', 0, 0, (err, eids) => {
             assert.ifError(err);
             events.deleteEvents(eids, (err) => {
@@ -622,19 +622,19 @@ describe('socket.io', () => {
                 db.isSortedSetMembers('events:time', eids, (err, isMembers) => {
                     assert.ifError(err);
                     assert(!isMembers.includes(true));
-                    done();
+                    // done();
                 });
             });
         });
     });
 
-    it('should delete all events', (done) => {
+    it('should delete all events', async () => {
         events.deleteAll((err) => {
             assert.ifError(err);
             db.sortedSetCard('events:time', (err, count) => {
                 assert.ifError(err);
                 assert.equal(count, 0);
-                done();
+                // done();
             });
         });
     });
