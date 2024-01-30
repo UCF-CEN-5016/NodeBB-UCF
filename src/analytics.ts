@@ -25,9 +25,9 @@ import pubsub from './pubsub';
 import cacheCreate from './cache/lru';
 
 const sleep = util.promisify(setTimeout);
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const Analytics = module.exports;
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const secret = nconf.get('secret');
 
 let local = {
@@ -51,7 +51,7 @@ function publishLocalAnalytics() {
     local = _.cloneDeep(empty);
 }
 
-function incrementProperties(obj1, obj2) {
+function incrementProperties(obj1, obj2: string) {
     for (const [key, value] of Object.entries(obj2)) {
         if (typeof value === 'object') {
             // The next line calls a function in a module that has not been updated to TS yet
@@ -59,26 +59,30 @@ function incrementProperties(obj1, obj2) {
             incrementProperties(obj1[key], value);
         } else if (utils.isNumber(value)) {
             // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+            @typescript-eslint/no-unsafe-assignment */
             obj1[key] = obj1[key] || 0;
             // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+            @typescript-eslint/no-unsafe-assignment */
             obj1[key] += obj2[key];
         }
     }
 }
-
+/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */
 const runJobs = nconf.get('runJobs');
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Analytics.init = function () {
     ipCache = cacheCreate({
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        max: parseInt(meta.config['analytics:maxCache'], 10) || 500,
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment */
+        max: parseInt(meta.config['analytics:maxCache'] as string, 10) || 500,
         ttl: 0,
     });
-
+    // The next line calls a function in a module that has not been updated to TS yet
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
     new cronJob('*/10 * * * * *', (async () => {
         publishLocalAnalytics();
         if (runJobs) {
@@ -93,7 +97,7 @@ Analytics.init = function () {
         pubsub.on('analytics:publish', (data) => {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            incrementProperties(total, data.local);
+            incrementProperties(total, data.local as string);
         });
     }
 };
@@ -104,11 +108,17 @@ Analytics.init = function () {
 Analytics.increment = function (keys, callback) {
     keys = Array.isArray(keys) ? keys : [keys];
 
-    plugins.hooks.fire('action:analytics.increment', { keys: keys });
+    plugins.hooks.fire('action:analytics.increment', { keys: [keys] })
+        .catch(err => (err))
+        .then(() => console.log('this will succeed'));
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     keys.forEach((key) => {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         local.counters[key] = local.counters[key] || 0;
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         local.counters[key] += 1;
     });
 
@@ -116,11 +126,13 @@ Analytics.increment = function (keys, callback) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         callback();
+        // The next line calls a function in a module that has not been updated to TS yet
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
     }
 };
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-Analytics.getKeys = async () => db.getSortedSetRange('analyticsKeys', 0, -1);
+Analytics.getKeys = db.getSortedSetRange('analyticsKeys', 0, -1);
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Analytics.pageView = async function (payload) {
@@ -265,7 +277,7 @@ Analytics.getHourlyStatsForSet = async function (set, hour, numHours) {
     const terms = {};
     const hoursArr = [];
 
-    hour = new Date(hour);
+    hour = new Date();
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     hour.setHours(hour.getHours(), 0, 0, 0);
@@ -282,21 +294,23 @@ Analytics.getHourlyStatsForSet = async function (set, hour, numHours) {
     hoursArr.forEach((term, index) => {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        terms[term] = parseInt(counts[index], 10) || 0;
+        terms[term] = parseInt(counts[index] as string, 10) || 0;
     });
 
     const termsArr = [];
 
     hoursArr.reverse();
     hoursArr.forEach((hour) => {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         termsArr.push(terms[hour]);
     });
-
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-return */
     return termsArr;
 };
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-Analytics.getDailyStatsForSet = async function (set, day, numDays) {
+Analytics.getDailyStatsForSet = async function (set: string, day, numDays) {
     // Guard against accidental ommission of `analytics:` prefix
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -305,11 +319,11 @@ Analytics.getDailyStatsForSet = async function (set, day, numDays) {
     }
 
     const daysArr = [];
-    day = new Date(day);
+    day = new Date();
     // set the date to tomorrow, because getHourlyStatsForSet steps *backwards* 24 hours to sum up the values
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    day.setDate(day.getDate() + 1);
+    day.setDate(day.getDate() as number + 1);
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     day.setHours(0, 0, 0, 0);
@@ -317,7 +331,8 @@ Analytics.getDailyStatsForSet = async function (set, day, numDays) {
     while (numDays > 0) {
         /* eslint-disable no-await-in-loop */
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment */
         const dayData = await Analytics.getHourlyStatsForSet(
             set,
             // The next line calls a function in a module that has not been updated to TS yet
@@ -326,10 +341,12 @@ Analytics.getDailyStatsForSet = async function (set, day, numDays) {
             24
         );
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        daysArr.push(dayData.reduce((cur, next) => cur + next));
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-return */
+        daysArr.push(dayData.reduce((cur, next) => cur.concat(next)));
         numDays -= 1;
     }
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-return */
     return daysArr;
 };
 
@@ -344,6 +361,8 @@ Analytics.getSummary = async function () {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+    @typescript-eslint/no-unsafe-assignment */
     const [seven, thirty] = await Promise.all([
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -355,29 +374,35 @@ Analytics.getSummary = async function () {
 
     return {
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        seven: seven.reduce((sum, cur) => sum + cur, 0),
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
+        seven: seven.reduce((sum, cur) => sum.concat(cur), 0),
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        thirty: thirty.reduce((sum, cur) => sum + cur, 0),
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
+        thirty: thirty.reduce((sum, cur) => sum.concat(cur), 0),
     };
 };
 
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-Analytics.getCategoryAnalytics = async function (cid) {
+Analytics.getCategoryAnalytics = async function (cid:string) {
     return await utils.promiseParallel({
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+         @typescript-eslint/no-unsafe-assignment */
         'pageviews:hourly': Analytics.getHourlyStatsForSet(`analytics:pageviews:byCid:${cid}`, Date.now(), 24),
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+         @typescript-eslint/no-unsafe-assignment */
         'pageviews:daily': Analytics.getDailyStatsForSet(`analytics:pageviews:byCid:${cid}`, Date.now(), 30),
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment */
         'topics:daily': Analytics.getDailyStatsForSet(`analytics:topics:byCid:${cid}`, Date.now(), 7),
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment */
         'posts:daily': Analytics.getDailyStatsForSet(`analytics:posts:byCid:${cid}`, Date.now(), 7),
     });
 };
@@ -389,10 +414,12 @@ Analytics.getErrorAnalytics = async function () {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     return await utils.promiseParallel({
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment */
         'not-found': Analytics.getDailyStatsForSet('analytics:errors:404', Date.now(), 7),
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment */
         toobusy: Analytics.getDailyStatsForSet('analytics:errors:503', Date.now(), 7),
     });
 };
@@ -404,10 +431,12 @@ Analytics.getBlacklistAnalytics = async function () {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     return await utils.promiseParallel({
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment */
         daily: Analytics.getDailyStatsForSet('analytics:blacklist', Date.now(), 7),
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+        @typescript-eslint/no-unsafe-assignment */
         hourly: Analytics.getHourlyStatsForSet('analytics:blacklist', Date.now(), 24),
     });
 };
