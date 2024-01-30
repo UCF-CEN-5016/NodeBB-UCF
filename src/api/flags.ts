@@ -1,11 +1,14 @@
 // 'use strict';
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
 const user = require('../user');
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
 const flags = require('../flags');
 
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const flagsApi = module.exports;
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 flagsApi.create = async (caller: { uid: number }, data: { type: string; id: number; reason: string }) => {
     const required: string[] = ['type', 'id', 'reason'];
     if (!required.every(prop => !!data[prop])) {
@@ -34,7 +37,7 @@ flagsApi.create = async (caller: { uid: number }, data: { type: string; id: numb
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return flagObj;
 };
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 flagsApi.update = async (caller: { uid: number }, data: {flagId: number}) => {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -52,8 +55,7 @@ flagsApi.update = async (caller: { uid: number }, data: {flagId: number}) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
     return await flags.getHistory(flagId);
 };
-
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 flagsApi.appendNote = async (caller: { uid: number }, data: {datetime: number, flagId: number, note: string}) => {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -93,7 +95,7 @@ flagsApi.appendNote = async (caller: { uid: number }, data: {datetime: number, f
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { notes: notes, history: history };
 };
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 flagsApi.deleteNote = async (caller: {uid: number}, data: {flagId: number, datetime: number}) => {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment

@@ -8,9 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
 const user = require('../user');
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
 const flags = require('../flags');
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const flagsApi = module.exports;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 flagsApi.create = (caller, data) => __awaiter(this, void 0, void 0, function* () {
     const required = ['type', 'id', 'reason'];
     if (!required.every(prop => !!data[prop])) {
@@ -34,6 +38,7 @@ flagsApi.create = (caller, data) => __awaiter(this, void 0, void 0, function* ()
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return flagObj;
 });
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 flagsApi.update = (caller, data) => __awaiter(this, void 0, void 0, function* () {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -50,6 +55,7 @@ flagsApi.update = (caller, data) => __awaiter(this, void 0, void 0, function* ()
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
     return yield flags.getHistory(flagId);
 });
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 flagsApi.appendNote = (caller, data) => __awaiter(this, void 0, void 0, function* () {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -88,6 +94,7 @@ flagsApi.appendNote = (caller, data) => __awaiter(this, void 0, void 0, function
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { notes: notes, history: history };
 });
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 flagsApi.deleteNote = (caller, data) => __awaiter(this, void 0, void 0, function* () {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
