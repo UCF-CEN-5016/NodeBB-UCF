@@ -35,7 +35,7 @@ flagsApi.create = async (caller: { uid: number }, data: { type: string; id: numb
     return flagObj;
 };
 
-flagsApi.update = async (caller, data) => {
+flagsApi.update = async (caller: { uid: number }, data: {flagId: number}) => {
     const allowed = await user.isPrivileged(caller.uid);
     if (!allowed) {
         throw new Error('[[error:no-privileges]]');
@@ -47,6 +47,7 @@ flagsApi.update = async (caller, data) => {
     await flags.update(flagId, caller.uid, data);
     return await flags.getHistory(flagId);
 };
+
 
 flagsApi.appendNote = async (caller, data) => {
     const allowed = await user.isPrivileged(caller.uid);
