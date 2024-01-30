@@ -31,7 +31,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
 const categories = __importStar(require("../categories"));
 const events = __importStar(require("../events"));
 const user = __importStar(require("../user"));
@@ -40,164 +39,138 @@ const privileges = __importStar(require("../privileges"));
 const categoriesAPI = {
     get(caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const [userPrivileges, category] = yield Promise.all([
+                privileges.categories.get(data.cid, caller.uid),
                 // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                const [userprivileges, category] = yield Promise.all([
-                    privileges.categories.get(data.cid, caller.uid),
-                    // The next line calls a function in a module that has not been updated to TS yet
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                    categories.getCategoryData(data.cid),
-                ]);
-                if (!category || !userprivileges.read) {
-                    return null;
-                }
-                return category;
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                categories.getCategoryData(data.cid),
+            ]);
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            if (!category || !userPrivileges.read) {
+                return null;
             }
-            catch (error) {
-                console.error('Error in get function:', error);
-                throw error; // Rethrow the error to the caller
-            }
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return category;
         });
     },
     create(caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-                const response = categories.create(data);
-                // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-                const categoryObjs = yield categories.getcategories([response.cid], caller.uid);
-                return categoryObjs[0];
-            }
-            catch (error) {
-                console.error('Error in create function:', error);
-                throw error; // Rethrow the error to the caller
-            }
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+            const response = yield categories.create(data);
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+            const categoryObjs = yield categories.getCategories([response.cid], caller.uid);
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+            return categoryObjs[0];
         });
     },
     update(caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                if (!data) {
-                    throw new Error('[[error:invalid-data]]');
-                }
-                // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                yield categories.update(data);
+            if (!data) {
+                throw new Error('[[error:invalid-data]]');
             }
-            catch (error) {
-                console.error('Error in update function:', error);
-                throw error; // Rethrow the error to the caller
-            }
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            yield categories.update(data);
         });
     },
     delete(caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+            const name = yield categories.getCategoryField(data.cid, 'name');
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            yield categories.purge(data.cid, caller.uid);
+            yield events.log({
+                type: 'category-purge',
+                uid: caller.uid,
+                ip: caller.ip,
+                cid: data.cid,
                 // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-                const name = yield categories.getCategoryField(data.cid, 'name');
-                // The next line calls a function in a module that has not been updated to TS yet
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                yield categories.purge(data.cid, caller.uid);
-                yield events.log({
-                    type: 'category-purge',
-                    uid: caller.uid,
-                    ip: caller.ip,
-                    cid: data.cid,
-                    name: name,
-                });
-            }
-            catch (error) {
-                console.error('Error in delete function:', error);
-                throw error; // Rethrow the error to the caller
-            }
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                name: name,
+            });
         });
     },
     getPrivileges(caller, cid) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                let responsePayload;
-                if (cid === 'admin') {
-                    responsePayload = yield privileges.admin.list(caller.uid);
-                }
-                else if (!parseInt(cid.toString(), 10)) {
-                    responsePayload = yield privileges.global.list();
-                }
-                else {
-                    responsePayload = yield privileges.categories.list(cid.toString());
-                }
-                return responsePayload;
+            let responsePayload;
+            if (cid === 'admin') {
+                responsePayload = yield privileges.admin.list(caller.uid);
             }
-            catch (error) {
-                console.error('Error in getPrivileges function:', error);
-                throw error; // Rethrow the error to the caller
+            else if (!parseInt(cid, 10)) {
+                responsePayload = yield privileges.global.list();
             }
+            else {
+                responsePayload = yield privileges.categories.list(cid);
+            }
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return responsePayload;
         });
     },
     setPrivilege(caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const [userExists, groupExists] = yield Promise.all([
+                user.exists(data.member),
+                groups.exists(data.member),
+            ]);
+            if (!userExists && !groupExists) {
+                throw new Error('[[error:no-user-or-group]]');
+            }
+            const privs = Array.isArray(data.privilege) ? data.privilege : [data.privilege];
+            const type = data.set ? 'give' : 'rescind';
+            if (!privs.length) {
+                throw new Error('[[error:invalid-data]]');
+            }
+            if (parseInt(data.cid, 10) === 0) {
                 // The next line calls a function in a module that has not been updated to TS yet
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                const [userExists, groupExists] = yield Promise.all([
-                    user.exists(data.member),
-                    groups.exists(data.member),
-                ]);
-                if (!userExists && !groupExists) {
-                    throw new Error('[[error:no-user-or-group]]');
+                const adminPrivList = yield privileges.admin.getPrivilegeList();
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+                const adminPrivs = privs.filter(priv => adminPrivList.includes(priv));
+                if (adminPrivs.length) {
+                    yield privileges.admin[type](adminPrivs, data.member);
                 }
-                const privs = Array.isArray(data.privilege) ? data.privilege : [data.privilege];
-                const type = data.set ? 'give' : 'rescind';
-                if (!privs.length) {
-                    throw new Error('[[error:invalid-data]]');
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                const globalPrivList = yield privileges.global.getPrivilegeList();
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+                const globalPrivs = privs.filter(priv => globalPrivList.includes(priv));
+                if (globalPrivs.length) {
+                    yield privileges.global[type](globalPrivs, data.member);
                 }
-                if (parseInt(data.cid.toString(), 10) === 0) {
-                    // The next line calls a function in a module that has not been updated to TS yet
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    const adminPrivList = yield privileges.admin.getPrivilegeList();
-                    // Disabling lint tests this way for next few lines, doing it normally was more than 120 length
-                    // The next line calls a function in a module that has not been updated to TS yet
-                    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-                    const adminPrivs = privs.filter(priv => adminPrivList.includes(priv));
-                    if (adminPrivs.length) {
-                        yield privileges.admin[type](adminPrivs, data.member);
-                    }
-                    // The next line calls a function in a module that has not been updated to TS yet
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    const globalPrivList = yield privileges.global.getPrivilegeList();
-                    // The next line calls a function in a module that has not been updated to TS yet
-                    const globalPrivs = privs.filter(priv => globalPrivList.includes(priv));
-                    if (globalPrivs.length) {
-                        yield privileges.global[type](globalPrivs, data.member);
-                    }
-                }
-                else {
-                    // The next line calls a function in a module that has not been updated to TS yet
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    const categoryPrivList = yield privileges.categories.getPrivilegeList();
-                    // The next line calls a function in a module that has not been updated to TS yet
-                    const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
-                    yield privileges.categories[type](categoryPrivs, data.cid.toString(), data.member);
-                }
-                /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access  */
-                yield events.log({
-                    uid: caller.uid,
-                    type: 'privilege-change',
-                    ip: caller.ip,
-                    privilege: Array.isArray(data.privilege) ? data.privilege.toString() : data.privilege,
-                    cid: data.cid.toString(),
-                    action: data.set ? 'grant' : 'rescind',
-                    target: data.member,
-                });
             }
-            catch (error) {
-                console.error('Error in setPrivilege function:', error);
-                throw error; // Rethrow the error to the caller
+            else {
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                const categoryPrivList = yield privileges.categories.getPrivilegeList();
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+                const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
+                yield privileges.categories[type](categoryPrivs, data.cid, data.member);
             }
+            yield events.log({
+                uid: caller.uid,
+                type: 'privilege-change',
+                ip: caller.ip,
+                privilege: data.privilege.toString(),
+                cid: data.cid,
+                action: data.set ? 'grant' : 'rescind',
+                target: data.member,
+            });
         });
     },
 };
-exports.default = categoriesAPI;
+module.exports = categoriesAPI;
