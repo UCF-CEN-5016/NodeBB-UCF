@@ -29,22 +29,23 @@ const middleware_1 = __importDefault(require("../middleware"));
 const helpers_1 = __importDefault(require("../middleware/helpers"));
 // eslint-disable-next-line import/no-import-module-exports
 const helpers_2 = __importDefault(require("./helpers"));
+const relative_path = nconf_1.default.get('relative_path');
 function handleURIErrors(err, req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         // Handle cases where malformed URIs are passed in
         if (err instanceof URIError) {
-            const cleanPath = req.path.replace(new RegExp(`^${nconf_1.default.get('relative_path')}`), '');
+            const cleanPath = req.path.replace(new RegExp(`^${relative_path}`), '');
             const tidMatch = cleanPath.match(/^\/topic\/(\d+)\//);
             const cidMatch = cleanPath.match(/^\/category\/(\d+)\//);
             if (tidMatch) {
-                res.redirect(nconf_1.default.get('relative_path') + tidMatch[0]);
+                res.redirect(relative_path + tidMatch[0]);
             }
             else if (cidMatch) {
-                res.redirect(nconf_1.default.get('relative_path') + cidMatch[0]);
+                res.redirect(relative_path + cidMatch[0]);
             }
             else {
                 winston_1.default.warn(`[controller] Bad request: ${req.path}`);
-                if (req.path.startsWith(`${nconf_1.default.get('relative_path')}/api`)) {
+                if (req.path.startsWith(`${relative_path}/api`)) {
                     res.status(400).json({
                         error: '[[global:400.title]]',
                     });
@@ -83,10 +84,10 @@ exports.handleErrors = function handleErrors(err, req, res, next) {
                 // Display NodeBB error page
                 const status = parseInt(err.status, 10);
                 if ((status === 302 || status === 308) && err.path) {
-                    return res.locals.isAPI ? res.set('X-Redirect', err.path).status(200).json(err.path) : res.redirect(nconf_1.default.get('relative_path') + err.path);
+                    return res.locals.isAPI ? res.set('X-Redirect', err.path).status(200).json(err.path) : res.redirect(relative_path + err.path);
                 }
                 const path = String(req.path || '');
-                if (path.startsWith(`${nconf_1.default.get('relative_path')}/api/v3`)) {
+                if (path.startsWith(`${relative_path}/api/v3`)) {
                     let status = 500;
                     if (err.message.startsWith('[[')) {
                         status = 400;
