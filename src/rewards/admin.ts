@@ -1,83 +1,132 @@
-import * as plugins from '../plugins';
-import * as db from '../database';
-import * as utils from '../utils';
-npm install mongoose
+import plugins = require('../plugins');
+import db = require('../database');
+import utils = require('../utils');
 
+type Condition = string;
 
-interface RewardData {
-  id?: string;
-  rewards: Record<string, any>;
-  condition?: string;
-  disabled?: boolean | string;
-}
-
-export const rewards = {
-  save: async function (data: RewardData[]): Promise<RewardData[]> {
-    async function save(data: RewardData) {
-      if (!Object.keys(data.rewards).length) {
-        return;
-      }
-      const rewardsData = data.rewards;
-      delete data.rewards;
-      if (!parseInt(data.id!, 10)) {
-        data.id = (await db.incrObjectField('global', 'rewards:id')).toString();
-      }
-      await rewards.delete(data);
-      await db.setAdd('rewards:list', data.id);
-      await db.setObject(`rewards:id:${data.id}`, data);
-      await db.setObject(`rewards:id:${data.id}:rewards`, rewardsData);
-    }
-    await Promise.all(data.map((item) => save(item)));
-    await saveConditions(data);
-    return data;
-  },
-  delete: async function (data: RewardData) {
-    await Promise.all([
-      db.setRemove('rewards:list', data.id!),
-      db.delete(`rewards:id:${data.id}`),
-      db.delete(`rewards:id:${data.id}:rewards`),
-    ]);
-  },
-  get: async function () {
-    return await utils.promiseParallel({
-      active: getActiveRewards(),
-      conditions: plugins.hooks.fire('filter:rewards.conditions', []),
-      conditionals: plugins.hooks.fire('filter:rewards.conditionals', []),
-      rewards: plugins.hooks.fire('filter:rewards.rewards', []),
-    });
-  },
+type Reward = {
+    id: string;
+    rewards: Record<string, string>;
+    condition: Condition;
+    disabled: string | boolean;
 };
 
-async function saveConditions(data: RewardData[]) {
-  const rewardsPerCondition: Record<string, string[]> = {};
-  await db.delete('conditions:active');
-  const conditions: string[] = [];
-  data.forEach((reward) => {
-    if (reward.condition) {
-      conditions.push(reward.condition);
-      rewardsPerCondition[reward.condition] = rewardsPerCondition[reward.condition] || [];
-      rewardsPerCondition[reward.condition].push(reward.id!);
-    }
-  });
-  await db.setAdd('conditions:active', conditions);
-  await Promise.all(Object.keys(rewardsPerCondition).map((c) => db.setAdd(`condition:${c}:rewards`, rewardsPerCondition[c])));
+type ActiveRewardsData = {
+    active: Reward[];
+    conditions: Condition[];
+    conditionals: Record<string, string>[];
+    rewards: Record<string, string>[];
+};
+
+type RewardsModule = {
+    save: (data: Reward[]) => Promise<Reward[]>;
+    delete: (data: Reward) => Promise<void>;
+    get: () => Promise<ActiveRewardsData>;
+};
+
+const rewards: RewardsModule = module.exports as RewardsModule;
+
+export async function saveConditions(data: Reward[]): Promise<void> {
+    const rewardsPerCondition: Record<string, string[]> = {};
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    await db.delete('conditions:active');
+    const conditions: Condition[] = [];
+
+    data.forEach((reward) => {
+        conditions.push(reward.condition);
+        rewardsPerCondition[reward.condition] = rewardsPerCondition[reward.condition] || [];
+        rewardsPerCondition[reward.condition].push(reward.id);
+    });
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    await db.setAdd('conditions:active', conditions);
+
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    await Promise.all(Object.keys(rewardsPerCondition).map(c => db.setAdd(condition:${c}:rewards, rewardsPerCondition[c]) as void));
 }
 
-async function getActiveRewards() {
-  async function load(id: string) {
-    const [main, rewards] = await Promise.all([
-      db.getObject(`rewards:id:${id}`),
-      db.getObject(`rewards:id:${id}:rewards`),
+rewards.save = async function (data: Reward[]): Promise<Reward[]> {
+    async function save(data: Reward): Promise<void> {
+        if (!Object.keys(data.rewards).length) {
+            return;
+        }
+        const rewardsData = data.rewards;
+        delete data.rewards;
+
+        if (!parseInt(data.id, 10)) {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            data.id = await db.incrObjectField('global', 'rewards:id') as string;
+        }
+
+        await rewards.delete(data);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        await db.setAdd('rewards:list', data.id);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        await db.setObject(rewards:id:${data.id}, data);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        await db.setObject(rewards:id:${data.id}:rewards, rewardsData);
+    }
+
+    await Promise.all(data.map(data => save(data)));
+    await saveConditions(data);
+    return data;
+};
+
+rewards.delete = async function (data: Reward): Promise<void> {
+    await Promise.all([
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        db.setRemove('rewards:list', data.id),
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        db.delete(rewards:id:${data.id}),
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        db.delete(rewards:id:${data.id}:rewards),
     ]);
-    if (main) {
-      main.disabled = main.disabled === 'true';
-      main.rewards = rewards;
+};
+
+
+export async function getActiveRewards(): Promise<Reward[]> {
+    async function load(id: string): Promise<Reward | null> {
+        const [main, rewards]: [Reward | null, Record<string, string> | null] = await Promise.all([
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            db.getObject(rewards:id:${id}),
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            db.getObject(rewards:id:${id}:rewards),
+        ]) as [Reward | null, Record<string, string> | null];
+
+        if (main) {
+            main.disabled = main.disabled === 'true';
+            main.rewards = rewards;
+        }
+
+        return main;
     }
-    return main;
-  }
-  const rewardsList = await db.getSetMembers('rewards:list');
-  const rewardData = await Promise.all(rewardsList.map((id) => load(id)));
-  return rewardData.filter(Boolean);
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const rewardsList: string[] = await db.getSetMembers('rewards:list') as string[];
+    const rewardData: (Reward | null)[] = await Promise.all(rewardsList.map(id => load(id)));
+    return rewardData.filter(Boolean);
 }
 
-import('../promisify')(rewards);
+
+rewards.get = async function (): Promise<ActiveRewardsData> {
+    return await utils.promiseParallel({
+        active: getActiveRewards(),
+        conditions: plugins.hooks.fire('filter:rewards.conditions', []),
+        conditionals: plugins.hooks.fire('filter:rewards.conditionals', []),
+        rewards: plugins.hooks.fire('filter:rewards.rewards', []),
+    });
+};
+
+
+// require('../promisify')(rewards);
