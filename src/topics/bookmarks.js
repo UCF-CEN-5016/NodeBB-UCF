@@ -1,5 +1,4 @@
 "use strict";
-// bookmarks.ts
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -49,7 +48,8 @@ module.exports = function (Topics) {
             const postIndices = indices.map(i => (i === null ? 0 : i + 1));
             const minIndex = Math.min(...postIndices);
             const bookmarks = yield Topics.getTopicBookmarks(tid);
-            const uidData = bookmarks.map(b => ({ uid: b.value, bookmark: parseInt(b.score.toString(), 10) }))
+            const uidData = bookmarks
+                .map(b => ({ uid: b.value, bookmark: parseInt(b.score.toString(), 10) }))
                 .filter(data => data.bookmark >= minIndex);
             yield async_1.default.eachLimit(uidData, 50, (data) => __awaiter(this, void 0, void 0, function* () {
                 let bookmark = Math.min(data.bookmark, maxIndex);
