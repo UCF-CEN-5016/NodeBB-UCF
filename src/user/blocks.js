@@ -149,6 +149,7 @@ function blockFunction(User) {
                 return uids.filter((uid, index) => !isBlocked[index]); // bug
             });
         },
+        //comment
         filter: function (uid, property, set) {
             return __awaiter(this, void 0, void 0, function* () {
                 // Set might also potentially be number[]
