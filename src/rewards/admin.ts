@@ -4,7 +4,6 @@ import utils = require('../utils');
 
 type Condition = string;
 
-
 type Reward = {
     id: string;
     rewards: Record<string, string>;
@@ -45,7 +44,7 @@ export async function saveConditions(data: Reward[]): Promise<void> {
 
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    await Promise.all(Object.keys(rewardsPerCondition).map(c => db.setAdd(condition:${c}:rewards, rewardsPerCondition[c]) as void));
+    await Promise.all(Object.keys(rewardsPerCondition).map(c => db.setAdd(`condition:${c}:rewards`, rewardsPerCondition[c]) as void));
 }
 
 rewards.save = async function (data: Reward[]): Promise<Reward[]> {
@@ -68,10 +67,10 @@ rewards.save = async function (data: Reward[]): Promise<Reward[]> {
         await db.setAdd('rewards:list', data.id);
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        await db.setObject(rewards:id:${data.id}, data);
+        await db.setObject(`rewards:id:${data.id}`, data);
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        await db.setObject(rewards:id:${data.id}:rewards, rewardsData);
+        await db.setObject(`rewards:id:${data.id}:rewards`, rewardsData);
     }
 
     await Promise.all(data.map(data => save(data)));
@@ -86,10 +85,10 @@ rewards.delete = async function (data: Reward): Promise<void> {
         db.setRemove('rewards:list', data.id),
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        db.delete(rewards:id:${data.id}),
+        db.delete(`rewards:id:${data.id}`),
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        db.delete(rewards:id:${data.id}:rewards),
+        db.delete(`rewards:id:${data.id}:rewards`),
     ]);
 };
 
@@ -99,10 +98,10 @@ export async function getActiveRewards(): Promise<Reward[]> {
         const [main, rewards]: [Reward | null, Record<string, string> | null] = await Promise.all([
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            db.getObject(rewards:id:${id}),
+            db.getObject(`rewards:id:${id}`),
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            db.getObject(rewards:id:${id}:rewards),
+            db.getObject(`rewards:id:${id}:rewards`),
         ]) as [Reward | null, Record<string, string> | null];
 
         if (main) {
