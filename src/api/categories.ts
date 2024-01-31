@@ -100,4 +100,3 @@ categoriesAPI.setPrivilege = async (caller, data) => {
         target: data.member,
     });
 };
-//translated ts file

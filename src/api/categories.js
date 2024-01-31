@@ -1,70 +1,77 @@
 'use strict';
-
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 const categories = require('../categories');
 const events = require('../events');
 const user = require('../user');
 const groups = require('../groups');
 const privileges = require('../privileges');
-
 const categoriesAPI = module.exports;
-
-categoriesAPI.get = async function (caller, data) {
-    const [userPrivileges, category] = await Promise.all([
-        privileges.categories.get(data.cid, caller.uid),
-        categories.getCategoryData(data.cid),
-    ]);
-    if (!category || !userPrivileges.read) {
-        return null;
-    }
-
-    return category;
-};
-
-categoriesAPI.create = async function (caller, data) {
-    const response = await categories.create(data);
-    const categoryObjs = await categories.getCategories([response.cid], caller.uid);
-    return categoryObjs[0];
-};
-
-categoriesAPI.update = async function (caller, data) {
-    if (!data) {
-        throw new Error('[[error:invalid-data]]');
-    }
-    await categories.update(data);
-};
-
-categoriesAPI.delete = async function (caller, data) {
-    const name = await categories.getCategoryField(data.cid, 'name');
-    await categories.purge(data.cid, caller.uid);
-    await events.log({
-        type: 'category-purge',
-        uid: caller.uid,
-        ip: caller.ip,
-        cid: data.cid,
-        name: name,
+categoriesAPI.get = function (caller, data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const [userPrivileges, category] = yield Promise.all([
+            privileges.categories.get(data.cid, caller.uid),
+            categories.getCategoryData(data.cid),
+        ]);
+        if (!category || !userPrivileges.read) {
+            return null;
+        }
+        return category;
     });
 };
-
-categoriesAPI.getPrivileges = async (caller, cid) => {
-    let responsePayload;
-
-    if (cid === 'admin') {
-        responsePayload = await privileges.admin.list(caller.uid);
-    } else if (!parseInt(cid, 10)) {
-        responsePayload = await privileges.global.list();
-    } else {
-        responsePayload = await privileges.categories.list(cid);
-    }
-
-    return responsePayload;
+categoriesAPI.create = function (caller, data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield categories.create(data);
+        const categoryObjs = yield categories.getCategories([response.cid], caller.uid);
+        return categoryObjs[0];
+    });
 };
-
-categoriesAPI.setPrivilege = async (caller, data) => {
-    const [userExists, groupExists] = await Promise.all([
+categoriesAPI.update = function (caller, data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!data) {
+            throw new Error('[[error:invalid-data]]');
+        }
+        yield categories.update(data);
+    });
+};
+categoriesAPI.delete = function (caller, data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const name = yield categories.getCategoryField(data.cid, 'name');
+        yield categories.purge(data.cid, caller.uid);
+        yield events.log({
+            type: 'category-purge',
+            uid: caller.uid,
+            ip: caller.ip,
+            cid: data.cid,
+            name: name,
+        });
+    });
+};
+categoriesAPI.getPrivileges = (caller, cid) => __awaiter(void 0, void 0, void 0, function* () {
+    let responsePayload;
+    if (cid === 'admin') {
+        responsePayload = yield privileges.admin.list(caller.uid);
+    }
+    else if (!parseInt(cid, 10)) {
+        responsePayload = yield privileges.global.list();
+    }
+    else {
+        responsePayload = yield privileges.categories.list(cid);
+    }
+    return responsePayload;
+});
+categoriesAPI.setPrivilege = (caller, data) => __awaiter(void 0, void 0, void 0, function* () {
+    const [userExists, groupExists] = yield Promise.all([
         user.exists(data.member),
         groups.exists(data.member),
     ]);
-
     if (!userExists && !groupExists) {
         throw new Error('[[error:no-user-or-group]]');
     }
@@ -74,23 +81,23 @@ categoriesAPI.setPrivilege = async (caller, data) => {
         throw new Error('[[error:invalid-data]]');
     }
     if (parseInt(data.cid, 10) === 0) {
-        const adminPrivList = await privileges.admin.getPrivilegeList();
+        const adminPrivList = yield privileges.admin.getPrivilegeList();
         const adminPrivs = privs.filter(priv => adminPrivList.includes(priv));
         if (adminPrivs.length) {
-            await privileges.admin[type](adminPrivs, data.member);
+            yield privileges.admin[type](adminPrivs, data.member);
         }
-        const globalPrivList = await privileges.global.getPrivilegeList();
+        const globalPrivList = yield privileges.global.getPrivilegeList();
         const globalPrivs = privs.filter(priv => globalPrivList.includes(priv));
         if (globalPrivs.length) {
-            await privileges.global[type](globalPrivs, data.member);
+            yield privileges.global[type](globalPrivs, data.member);
         }
-    } else {
-        const categoryPrivList = await privileges.categories.getPrivilegeList();
-        const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
-        await privileges.categories[type](categoryPrivs, data.cid, data.member);
     }
-
-    await events.log({
+    else {
+        const categoryPrivList = yield privileges.categories.getPrivilegeList();
+        const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
+        yield privileges.categories[type](categoryPrivs, data.cid, data.member);
+    }
+    yield events.log({
         uid: caller.uid,
         type: 'privilege-change',
         ip: caller.ip,
@@ -99,4 +106,4 @@ categoriesAPI.setPrivilege = async (caller, data) => {
         action: data.set ? 'grant' : 'rescind',
         target: data.member,
     });
-};
+});
