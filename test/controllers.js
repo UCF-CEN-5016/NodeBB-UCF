@@ -1497,7 +1497,7 @@ describe('Controllers', () => {
             request(`${nconf.get('url')}/api/user/foo/export/posts`, { jar: jar }, (err, res, body) => {
                 assert.ifError(err);
                 assert.equal(res.statusCode, 200);
-                if (body){
+                if (body) {
                     assert(body);
                 }
                 done();
@@ -1516,7 +1516,7 @@ describe('Controllers', () => {
         it('should export users profile', (done) => {
             request(`${nconf.get('url')}/api/user/foo/export/profile`, { jar: jar }, (err, res, body) => {
                 assert.ifError(err);
-                if (res){
+                if (res) {
                     assert.equal(res.statusCode, 200);
                 }
                 assert(body);

@@ -545,7 +545,7 @@ describe('authentication', () => {
                 assert(locked);
                 next();
             },
-        ],);
+        ]);
     });
 
     it('should clear all reset tokens upon successful login', async () => {
