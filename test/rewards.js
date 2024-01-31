@@ -62,7 +62,7 @@ describe('rewards', () => {
             });
         });
 
-        it('should check condition', (done) => {
+        it('should check condition', () => {
             function method(next) {
                 next(null, 1);
             }
@@ -72,7 +72,6 @@ describe('rewards', () => {
                 method: method,
             }, (err, data) => {
                 assert.ifError(err);
-                done();
             });
         });
     });
