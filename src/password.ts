@@ -56,7 +56,7 @@ process.on('message', (msg:string) => {
     }
 });
 
-async function tryMethod(method, msg) {
+async function tryMethod(method:(msg:any) => Promise<any>, msg:any) {
     try {
         const result = await method(msg);
         process.send({ result: result });
@@ -67,13 +67,13 @@ async function tryMethod(method, msg) {
     }
 }
 
-async function hashPassword(msg) {
+async function hashPassword(msg:any) {
     const salt = await bcrypt.genSalt(parseInt(msg.rounds, 10));
     const hash = await bcrypt.hash(msg.password, salt);
     return hash;
 }
 
-async function compare(msg) {
+async function compare(msg:any) {
     return await bcrypt.compare(String(msg.password || ''), String(msg.hash || ''));
 }
 
