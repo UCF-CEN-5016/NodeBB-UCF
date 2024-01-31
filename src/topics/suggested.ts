@@ -1,83 +1,70 @@
-'use strict';
+import _ from 'lodash';
+import db from '../database';
+import user from '../user';
+import privileges from '../privileges';
+import search from '../search';
 
-const plugins = require('../plugins');
-const posts = require('../posts');
-
-module.exports = function (Topics) {
-    Topics.merge = async function (tids, uid, options) {
-        options = options || {};
-
-        const topicsData = await Topics.getTopicsFields(tids, ['scheduled']);
-        if (topicsData.some(t => t.scheduled)) {
-            throw new Error('[[error:cant-merge-scheduled]]');
-        }
-
-        const oldestTid = findOldestTopic(tids);
-        let mergeIntoTid = oldestTid;
-        if (options.mainTid) {
-            mergeIntoTid = options.mainTid;
-        } else if (options.newTopicTitle) {
-            mergeIntoTid = await createNewTopic(options.newTopicTitle, oldestTid);
-        }
-
-        const otherTids = tids.sort((a, b) => a - b)
-            .filter(tid => tid && parseInt(tid, 10) !== parseInt(mergeIntoTid, 10));
-
-        for (const tid of otherTids) {
-            /* eslint-disable no-await-in-loop */
-            const pids = await Topics.getPids(tid);
-            for (const pid of pids) {
-                await Topics.movePostToTopic(uid, pid, mergeIntoTid);
-            }
-
-            await Topics.setTopicField(tid, 'mainPid', 0);
-            await Topics.delete(tid, uid);
-            await Topics.setTopicFields(tid, {
-                mergeIntoTid: mergeIntoTid,
-                mergerUid: uid,
-                mergedTimestamp: Date.now(),
-            });
-        }
-
-        await Promise.all([
-            posts.updateQueuedPostsTopic(mergeIntoTid, otherTids),
-            updateViewCount(mergeIntoTid, tids),
+export default function (getTopicTags: any, getTopicsByTids: any, getTopicFields: any, getSortedSetRevRange: any, getSortedSetRevRangeByScore: any) {
+    const getSuggestedTopics = async function (tid: number, uid: number, start: number, stop: number, cutoff: number = 0) {
+        let tids: number[];
+        tid = parseInt(tid.toString(), 10);
+        cutoff = cutoff === 0 ? cutoff : (cutoff * 2592000000);
+        const [tagTids, searchTids] = await Promise.all([
+            getTidsWithSameTags(tid, cutoff),
+            getSearchTids(tid, uid, cutoff),
         ]);
 
-        plugins.hooks.fire('action:topic.merge', {
-            uid: uid,
-            tids: tids,
-            mergeIntoTid: mergeIntoTid,
-            otherTids: otherTids,
-        });
-        return mergeIntoTid;
+        tids = _.uniq(tagTids.concat(searchTids));
+
+        let categoryTids: number[] = [];
+        if (stop !== -1 && tids.length < stop - start + 1) {
+            categoryTids = await getCategoryTids(tid, cutoff);
+        }
+        tids = _.shuffle(_.uniq(tids.concat(categoryTids)));
+        tids = await privileges.topics.filterTids('topics:read', tids, uid);
+
+        let topicData = await getTopicsByTids(tids, uid);
+        topicData = topicData.filter((topic: any) => topic && topic.tid !== tid);
+        topicData = await user.blocks.filter(uid, topicData);
+        topicData = topicData.slice(start, stop !== -1 ? stop + 1 : undefined)
+            .sort((t1: any, t2: any) => t2.timestamp - t1.timestamp);
+        return topicData;
     };
 
-    async function createNewTopic(title, oldestTid) {
-        const topicData = await Topics.getTopicFields(oldestTid, ['uid', 'cid']);
-        const params = {
-            uid: topicData.uid,
-            cid: topicData.cid,
-            title: title,
-        };
-        const result = await plugins.hooks.fire('filter:topic.mergeCreateNewTopic', {
-            oldestTid: oldestTid,
-            params: params,
+    async function getTidsWithSameTags(tid: number, cutoff: number) {
+        const tags = await getTopicTags(tid);
+        let tids = cutoff === 0 ?
+            await getSortedSetRevRange(tags.map((tag: string) => `tag:${tag}:topics`), 0, -1) :
+            await getSortedSetRevRangeByScore(tags.map((tag: string) => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff);
+        tids = tids.filter((_tid: number) => _tid !== tid); // remove self
+        return _.shuffle(_.uniq(tids)).slice(0, 10).map(Number);
+    }
+
+    async function getSearchTids(tid: number, uid: number, cutoff: number) {
+        const topicData = await getTopicFields(tid, ['title', 'cid']);
+        const data = await search.search({
+            query: topicData.title,
+            searchIn: 'titles',
+            matchWords: 'any',
+            categories: [topicData.cid],
+            uid: uid,
+            returnIds: true,
+            timeRange: cutoff !== 0 ? cutoff / 1000 : 0,
+            timeFilter: 'newer',
         });
-        const tid = await Topics.create(result.params);
-        return tid;
+        data.tids = data.tids.filter((_tid: number) => _tid !== tid); // remove self
+        return _.shuffle(data.tids).slice(0, 10).map(Number);
     }
 
-    async function updateViewCount(mergeIntoTid, tids) {
-        const topicData = await Topics.getTopicsFields(tids, ['viewcount']);
-        const totalViewCount = topicData.reduce(
-            (count, topic) => count + parseInt(topic.viewcount, 10), 0
-        );
-        await Topics.setTopicField(mergeIntoTid, 'viewcount', totalViewCount);
+    async function getCategoryTids(tid: number, cutoff: number) {
+        const cid = await getTopicFields(tid, 'cid');
+        const tids = cutoff === 0 ?
+            await getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) :
+            await getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 9, '+inf', Date.now() - cutoff);
+        return _.shuffle(tids.map(Number).filter(_tid => _tid !== tid));
     }
 
-    function findOldestTopic(tids) {
-        return Math.min.apply(null, tids);
-    }
-};
-
+    return {
+        getSuggestedTopics
+    };
+}
