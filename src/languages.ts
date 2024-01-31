@@ -1,96 +1,96 @@
-    "use strict";
+"use strict";
 
-    import * as fs from 'fs';
-    import * as path from 'path';
-    import * as utils from './utils';
-    import { paths } from './constants';
-    import * as plugins from './plugins';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as utils from './utils';
+import { paths } from './constants';
+import * as plugins from './plugins';
 
-    export const Languages: Record<string, any> = {};
+export const Languages: Record<string, any> = {};
 
-    const languagesPath = path.join(__dirname, '../build/public/language');
-    const files = fs.readdirSync(path.join(paths.nodeModules, '/timeago/locales'));
+const languagesPath = path.join(__dirname, '../build/public/language');
+const files = fs.readdirSync(path.join(paths.nodeModules, '/timeago/locales'));
 
-    Languages.timeagoCodes = files.filter((f) => f.startsWith('jquery.timeago')).map((f) => f.split('.')[2]);
+Languages.timeagoCodes = files.filter((f) => f.startsWith('jquery.timeago')).map((f) => f.split('.')[2]);
 
-    Languages.get = async function (language: string, namespace: string) {
-        const pathToLanguageFile = path.join(languagesPath, language, `${namespace}.json`);
+Languages.get = async function (language: string, namespace: string) {
+    const pathToLanguageFile = path.join(languagesPath, language, `${namespace}.json`);
 
-        if (!pathToLanguageFile.startsWith(languagesPath)) {
-            throw new Error('[[error:invalid-path]]');
-        }
+    if (!pathToLanguageFile.startsWith(languagesPath)) {
+        throw new Error('[[error:invalid-path]]');
+    }
 
-        const data = await fs.promises.readFile(pathToLanguageFile, 'utf8');
-        const parsed = JSON.parse(data) || {};
+    const data = await fs.promises.readFile(pathToLanguageFile, 'utf8');
+    const parsed = JSON.parse(data) || {};
 
-        const result = await plugins.hooks.fire('filter:languages.get', {
-            language,
-            namespace,
-            data: parsed,
-        });
+    const result = await plugins.hooks.fire('filter:languages.get', {
+        language,
+        namespace,
+        data: parsed,
+    });
 
-        return result.data;
+    return result.data;
     };
 
-    let codeCache: string[] | null = null;
+let codeCache: string[] | null = null;
 
-    Languages.listCodes = async function () {
-        if (codeCache && codeCache.length) {
-            return codeCache;
+Languages.listCodes = async function () {
+    if (codeCache && codeCache.length) {
+        return codeCache;
+    }
+
+    try {
+        const file = await fs.promises.readFile(path.join(languagesPath, 'metadata.json'), 'utf8');
+        const parsed = JSON.parse(file);
+        codeCache = parsed.languages;
+
+        return parsed.languages;
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            return [];
         }
+        throw err;
+    }
+};
 
+let listCache: any[] | null = null;
+
+Languages.list = async function () {
+    if (listCache && listCache.length) {
+        return listCache;
+    }
+
+    const codes = await Languages.listCodes();
+    let languages = await Promise.all(codes.map(async (folder) => {
         try {
-            const file = await fs.promises.readFile(path.join(languagesPath, 'metadata.json'), 'utf8');
-            const parsed = JSON.parse(file);
-            codeCache = parsed.languages;
-
-            return parsed.languages;
+            const configPath = path.join(languagesPath, folder, 'language.json');
+            const file = await fs.promises.readFile(configPath, 'utf8');
+            const lang = JSON.parse(file);
+            return lang;
         } catch (err) {
             if (err.code === 'ENOENT') {
-                return [];
+                return;
             }
             throw err;
         }
-    };
+    }));
 
-    let listCache: any[] | null = null;
+    // filter out invalid ones
+    languages = languages.filter((lang) => lang && lang.code && lang.name && lang.dir);
+    listCache = languages;
 
-    Languages.list = async function () {
-        if (listCache && listCache.length) {
-            return listCache;
-        }
+    return languages;
+};
 
-        const codes = await Languages.listCodes();
-        let languages = await Promise.all(codes.map(async (folder) => {
-            try {
-                const configPath = path.join(languagesPath, folder, 'language.json');
-                const file = await fs.promises.readFile(configPath, 'utf8');
-                const lang = JSON.parse(file);
-                return lang;
-            } catch (err) {
-                if (err.code === 'ENOENT') {
-                    return;
-                }
-                throw err;
-            }
-        }));
+Languages.userTimeagoCode = async function (userLang: string) {
+    const languageCodes = await Languages.listCodes();
+    const timeagoCode = utils.userLangToTimeagoCode(userLang);
 
-        // filter out invalid ones
-        languages = languages.filter((lang) => lang && lang.code && lang.name && lang.dir);
-        listCache = languages;
+    if (languageCodes.includes(userLang) && Languages.timeagoCodes.includes(timeagoCode)) {
+        return timeagoCode;
+    }
 
-        return languages;
-    };
+    return '';
+};
 
-    Languages.userTimeagoCode = async function (userLang: string) {
-        const languageCodes = await Languages.listCodes();
-        const timeagoCode = utils.userLangToTimeagoCode(userLang);
-
-        if (languageCodes.includes(userLang) && Languages.timeagoCodes.includes(timeagoCode)) {
-            return timeagoCode;
-        }
-
-        return '';
-    };
-
-    require('./promisify')(Languages);
+require('./promisify')(Languages);
