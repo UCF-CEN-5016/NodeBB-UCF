@@ -74,7 +74,7 @@ function incrementProperties(obj1, obj2: string) {
 const runJobs = nconf.get('runJobs');
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-Analytics.init = async function () {
+Analytics.init = function () {
     ipCache = cacheCreate({
         // The next line calls a function in a module that has not been updated to TS yet
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
@@ -84,7 +84,7 @@ Analytics.init = async function () {
     });
     // The next line calls a function in a module that has not been updated to TS yet
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-    await new CronJob('*/10 * * * * *', (async () => {
+    new CronJob('*/10 * * * * *', (async () => {
         publishLocalAnalytics();
         if (runJobs) {
             await sleep(2000);
@@ -131,13 +131,8 @@ Analytics.increment = function (keys, callback) {
     }
 };
 // The next line calls a function in a module that has not been updated to TS yet
-/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
-@typescript-eslint/no-unsafe-assignment */
-Analytics.getKeys = async function () {
-    // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    return await db.getSortedSetRange('analyticsKeys', 0, -1) as [];
-};
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+Analytics.getKeys = db.getSortedSetRange('analyticsKeys', 0, -1) as string;
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Analytics.pageView = async function (payload) {
@@ -348,7 +343,7 @@ Analytics.getDailyStatsForSet = async function (set: string, day, numDays) {
         // The next line calls a function in a module that has not been updated to TS yet
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
         @typescript-eslint/no-unsafe-return */
-        daysArr.push(dayData.reduce((cur: number, next: number) => cur + next));
+        daysArr.push(dayData.reduce((cur, next) => cur.concat(next)));
         numDays -= 1;
     }
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-return */
@@ -381,11 +376,11 @@ Analytics.getSummary = async function () {
         // The next line calls a function in a module that has not been updated to TS yet
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
         @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
-        seven: seven.reduce((sum: number, cur: number) => sum + cur, 0),
+        seven: seven.reduce((sum, cur) => sum.concat(cur), 0),
         // The next line calls a function in a module that has not been updated to TS yet
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
         @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
-        thirty: thirty.reduce((sum: number, cur: number) => sum + cur, 0),
+        thirty: thirty.reduce((sum, cur) => sum.concat(cur), 0),
     };
 };
 
