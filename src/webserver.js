@@ -42,6 +42,7 @@ const routes = require("./routes");
 const auth = require("./routes/authentication");
 const helpers = require("./helpers");
 const promisify_1 = __importDefault(require("./promisify"));
+const net_1 = require("net");
 const express = require('express');
 const app = express();
 app.renderAsync = util.promisify(app.render.bind(app));
@@ -273,17 +274,14 @@ function listen() {
 }
 exports.testSocket = function (socketPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (typeof socketPath !== 'string') {
-            throw new Error(`invalid socket path : ${socketPath}`);
-        }
-        const net = require('net');
-        const file = require('./file');
+        //const net = require('net');
+        //const file = require('./file');
         const exists = yield file.exists(socketPath);
         if (!exists) {
             return;
         }
         return new Promise((resolve, reject) => {
-            const testSocket = new net.Socket();
+            const testSocket = new net_1.Socket();
             testSocket.on('error', (err) => {
                 if (err.name !== 'ECONNREFUSED') {
                     return reject(err);

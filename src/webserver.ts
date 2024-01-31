@@ -34,7 +34,9 @@ import auth = require('./routes/authentication');
 import helpers = require('./helpers');
 
 import promisify from './promisify';
-import net from 'net';
+import { Socket } from 'net';
+import https from 'https';
+import http from 'http';
 
 const express = require('express');
 
@@ -44,24 +46,24 @@ declare module 'express' {
     }
 }
 
-const app: Express & { renderAsync?: (tpl: string, data: object, callback: Function) => Promise<string> } = express();
+const app: Express & { renderAsync?: (tpl: string, data: object, callback: () => any) => Promise<string> } = express();
 app.renderAsync = util.promisify(app.render.bind(app));
-let server;
+let server: https.Server | http.Server;
 
 if (nconf.get('ssl')) {
-    server = require('https').createServer({
+    server = https.createServer({
         key: fs.readFileSync(nconf.get('ssl').key),
         cert: fs.readFileSync(nconf.get('ssl').cert),
     }, app);
 } else {
-    server = require('http').createServer(app);
+    server = http.createServer(app);
 }
 
 module.exports.server = server;
 module.exports.app = app;
 
 server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
+    if (err.name === 'EADDRINUSE') {
         winston.error(`NodeBB address in use, exiting...\n${err.stack}`);
     } else {
         winston.error(err.stack);
@@ -290,7 +292,7 @@ async function listen() {
 
     const bind_address = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ? '0.0.0.0' : nconf.get('bind_address'));
     const args = isSocket ? [socketPath] : [port, bind_address];
-    let oldUmask;
+    let oldUmask: number;
 
     if (isSocket) {
         oldUmask = process.umask('0000');
@@ -320,18 +322,15 @@ async function listen() {
     });
 }
 
-exports.testSocket = async function (socketPath) {
-    if (typeof socketPath !== 'string') {
-        throw new Error(`invalid socket path : ${socketPath}`);
-    }
-    const net = require('net');
-    const file = require('./file');
-    const exists = await file.exists(socketPath);
+exports.testSocket = async function (socketPath: string) {
+    // const net = require('net');
+    // const file = require('./file');
+    const exists: boolean = await file.exists(socketPath);
     if (!exists) {
         return;
     }
     return new Promise<void>((resolve, reject) => {
-        const testSocket: net.Socket = new net.Socket();
+        const testSocket: Socket = new Socket();
         testSocket.on('error', (err) => {
             if (err.name !== 'ECONNREFUSED') {
                 return reject(err);
