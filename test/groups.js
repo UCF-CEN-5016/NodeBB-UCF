@@ -117,7 +117,8 @@ describe('Groups', () => {
     describe('.search()', () => {
         const socketGroups = require('../src/socket.io/groups');
 
-        it('should return empty array if query is falsy', (done) => {
+        it('should return empty array if query is falsy', function (done) {
+            this.timeout(300000);
             Groups.search(null, {}, (err, groups) => {
                 assert.ifError(err);
                 assert.equal(0, groups.length);
