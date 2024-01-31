@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as utils from './utils';
-import { paths } from './constants';
 import * as plugins from './plugins';
 
 interface LanguageData {
