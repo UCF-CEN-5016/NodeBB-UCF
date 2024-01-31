@@ -7,7 +7,7 @@ import * as bcrypt from 'bcryptjs';
 
 import { fork } from './meta/debugFork';
 
-function forkChild(message, callback) {
+function forkChild(message:any, callback:(error:Error | null, result ?: any) => void) {
     const child = fork(path.join(__dirname, 'password'));
 
     child.on('message', (msg) => {
