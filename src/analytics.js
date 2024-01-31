@@ -107,31 +107,33 @@ const runJobs = nconf_1.default.get('runJobs');
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Analytics.init = function () {
-    ipCache = (0, lru_1.default)({
-        // The next line calls a function in a module that has not been updated to TS yet
-        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
-        @typescript-eslint/no-unsafe-assignment */
-        max: parseInt(meta_1.default.config['analytics:maxCache'], 10) || 500,
-        ttl: 0,
-    });
-    // The next line calls a function in a module that has not been updated to TS yet
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-    new cron_1.CronJob('*/10 * * * * *', (() => __awaiter(this, void 0, void 0, function* () {
-        publishLocalAnalytics();
-        if (runJobs) {
-            yield sleep(2000);
+    return __awaiter(this, void 0, void 0, function* () {
+        ipCache = (0, lru_1.default)({
             // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            yield Analytics.writeData();
-        }
-    })), null, true);
-    if (runJobs) {
-        pubsub_1.default.on('analytics:publish', (data) => {
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            incrementProperties(total, data.local);
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+            @typescript-eslint/no-unsafe-assignment */
+            max: parseInt(meta_1.default.config['analytics:maxCache'], 10) || 500,
+            ttl: 0,
         });
-    }
+        // The next line calls a function in a module that has not been updated to TS yet
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+        yield new cron_1.CronJob('*/10 * * * * *', (() => __awaiter(this, void 0, void 0, function* () {
+            publishLocalAnalytics();
+            if (runJobs) {
+                yield sleep(2000);
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                yield Analytics.writeData();
+            }
+        })), null, true);
+        if (runJobs) {
+            pubsub_1.default.on('analytics:publish', (data) => {
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                incrementProperties(total, data.local);
+            });
+        }
+    });
 };
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -158,8 +160,15 @@ Analytics.increment = function (keys, callback) {
     }
 };
 // The next line calls a function in a module that has not been updated to TS yet
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-Analytics.getKeys = database_1.default.getSortedSetRange('analyticsKeys', 0, -1);
+/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+@typescript-eslint/no-unsafe-assignment */
+Analytics.getKeys = function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        return yield database_1.default.getSortedSetRange('analyticsKeys', 0, -1);
+    });
+};
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Analytics.pageView = function (payload) {
@@ -356,7 +365,7 @@ Analytics.getDailyStatsForSet = function (set, day, numDays) {
             // The next line calls a function in a module that has not been updated to TS yet
             /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-return */
-            daysArr.push(dayData.reduce((cur, next) => cur.concat(next)));
+            daysArr.push(dayData.reduce((cur, next) => cur + next));
             numDays -= 1;
         }
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-return */
@@ -388,11 +397,11 @@ Analytics.getSummary = function () {
             // The next line calls a function in a module that has not been updated to TS yet
             /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
-            seven: seven.reduce((sum, cur) => sum.concat(cur), 0),
+            seven: seven.reduce((sum, cur) => sum + cur, 0),
             // The next line calls a function in a module that has not been updated to TS yet
             /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
-            thirty: thirty.reduce((sum, cur) => sum.concat(cur), 0),
+            thirty: thirty.reduce((sum, cur) => sum + cur, 0),
         };
     });
 };
