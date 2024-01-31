@@ -3,7 +3,7 @@ import fs = require('fs');
 import util = require('util');
 import path = require('path');
 import os = require('os');
-import nconf = require('nconf');
+import nconf = require('nconf');// eslint-disable-next-line @no-import-module-exports
 import { Express } from 'express';
 import chalk = require('chalk');
 
@@ -12,7 +12,7 @@ import flash = require('connect-flash');
 import bodyParser = require('body-parser');
 import cookieParser = require('cookie-parser');
 import session = require('express-session');
-import useragent = require('express-useragent');
+import useragent = require('express-useragent');// eslint-disable-next-line @no-import-module-exports
 import favicon = require('serve-favicon');
 import detector = require('spider-detector');
 import helmet from 'helmet';

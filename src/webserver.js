@@ -43,23 +43,25 @@ const auth = require("./routes/authentication");
 const helpers = require("./helpers");
 const promisify_1 = __importDefault(require("./promisify"));
 const net_1 = require("net");
+const https_1 = __importDefault(require("https"));
+const http_1 = __importDefault(require("http"));
 const express = require('express');
 const app = express();
 app.renderAsync = util.promisify(app.render.bind(app));
 let server;
 if (nconf.get('ssl')) {
-    server = require('https').createServer({
+    server = https_1.default.createServer({
         key: fs.readFileSync(nconf.get('ssl').key),
         cert: fs.readFileSync(nconf.get('ssl').cert),
     }, app);
 }
 else {
-    server = require('http').createServer(app);
+    server = http_1.default.createServer(app);
 }
 module.exports.server = server;
 module.exports.app = app;
 server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
+    if (err.name === 'EADDRINUSE') {
         winston.error(`NodeBB address in use, exiting...\n${err.stack}`);
     }
     else {
@@ -274,8 +276,8 @@ function listen() {
 }
 exports.testSocket = function (socketPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        //const net = require('net');
-        //const file = require('./file');
+        // const net = require('net');
+        // const file = require('./file');
         const exists = yield file.exists(socketPath);
         if (!exists) {
             return;
