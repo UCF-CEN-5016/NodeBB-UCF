@@ -1,6 +1,7 @@
 import { db } from '../../database';
 import { user } from '../../user';
 import { topics } from '../../topics';
+import { TopicObject } from '../../types';
 
 interface Socket {
     uid: number;
@@ -13,13 +14,13 @@ interface Topic {
 }
 
 interface SocketTopics {
-    markAsRead(socket: Socket, tids: number[]): Promise<void>;
-    markTopicNotificationsRead(socket: Socket, tids: number[]): Promise<void>;
-    markAllRead(socket: Socket): Promise<void>;
-    markCategoryTopicsRead(socket: Socket, cid: number): Promise<void>;
-    markUnread(socket: Socket, tid: number): Promise<void>;
-    markAsUnreadForAll(socket: Socket, tids: number[]): Promise<void>;
-  }
+  markAsRead(socket: Socket, tids: number[]): Promise<void>;
+  markTopicNotificationsRead(socket: Socket, tids: number[]): Promise<void>;
+  markAllRead(socket: Socket): Promise<void>;
+  markCategoryTopicsRead(socket: Socket, cid: number): Promise<void>;
+  markUnread(socket: Socket, tid: number): Promise<void>;
+  markAsUnreadForAll(socket: Socket, tids: number[]): Promise<void>;
+}
 
 export = function (SocketTopics: SocketTopics) {
     SocketTopics.markAsRead = async function (socket: Socket, tids: number[]): Promise<void> {
@@ -29,15 +30,14 @@ export = function (SocketTopics: SocketTopics) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const hasMarked: boolean = await topics.markAsRead(tids, socket.uid) as boolean;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const promises = [topics.markTopicNotificationsRead(tids, socket.uid)];
+        const promises: Promise<void>[] = [topics.markTopicNotificationsRead(tids, socket.uid)] as Promise<void>[];
         if (hasMarked) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            promises.push(topics.pushUnreadCount(socket.uid));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            promises.push(topics.pushUnreadCount(socket.uid) as Promise<void>);
         }
         await Promise.all(promises);
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     SocketTopics.markTopicNotificationsRead = async function (socket: Socket, tids: number[]): Promise<void> {
         if (!Array.isArray(tids) || !socket.uid) {
             throw new Error('[[error:invalid-data]]');
@@ -76,13 +76,12 @@ export = function (SocketTopics: SocketTopics) {
         if (!Array.isArray(tids)) {
             throw new Error('[[error:invalid-tid]]');
         }
-
         if (socket.uid <= 0) {
             throw new Error('[[error:no-privileges]]');
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const isAdmin: boolean = await user.isAdministrator(socket.uid) as boolean;
-        const now = Date.now();
+        const now: number = Date.now();
         await Promise.all(tids.map(async (tid) => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             const topicData: Topic = await topics.getTopicFields(tid, ['tid', 'cid']) as Topic;
