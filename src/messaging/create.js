@@ -1,6 +1,7 @@
 "use strict";
 /* eslint max-len: off */
 /* eslint-disable import/no-import-module-exports */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -18,15 +19,29 @@ const meta_1 = __importDefault(require("../meta"));
 const plugins_1 = __importDefault(require("../plugins"));
 const database_1 = __importDefault(require("../database"));
 const user_1 = __importDefault(require("../user"));
+// I made Messaging be any since it is defined and used many times outside of this file and
+// the type is not defined
+// The next defines a variable as 'any' that is used outside of this file and the type is unknown
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 module.exports = function (Messaging) {
+    // The next line utilizes a variable in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
     Messaging.sendMessage = (data) => __awaiter(this, void 0, void 0, function* () {
+        // The next line calls a variable in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call,  @typescript-eslint/no-unsafe-assignment
         yield Messaging.checkContent(data.content);
+        // The next line calls a variable in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call,  @typescript-eslint/no-unsafe-assignment
         const inRoom = yield Messaging.isUserInRoom(data.uid, data.roomId);
         if (!inRoom) {
             throw new Error('[[error:not-allowed]]');
         }
+        // The next line calls a variable in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call,  @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
         return yield Messaging.addMessage(data);
     });
+    // The next line utilizes a variable in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     Messaging.checkContent = (content) => __awaiter(this, void 0, void 0, function* () {
         if (!content) {
             throw new Error('[[error:invalid-chat-message]]');
@@ -46,11 +61,16 @@ module.exports = function (Messaging) {
             throw new Error(`[[error:chat-message-too-long, ${maximumChatMessageLength}]]`);
         }
     });
+    // The next line utilizes a variable in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     Messaging.addMessage = (data) => __awaiter(this, void 0, void 0, function* () {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         const mid = yield database_1.default.incrObjectField('global', 'nextMid');
         const timestamp = data.timestamp || Date.now();
+        // I made message be any since it is used outside of this file and the type is unknown
+        // The next defines a variable as 'any' that is used outside of this file and the type is unknown
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let message = {
             content: data.content,
             timestamp: timestamp,
@@ -68,6 +88,8 @@ module.exports = function (Messaging) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         yield database_1.default.setObject(`message:${mid}`, message);
+        // The next line calls a variable in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call,  @typescript-eslint/no-unsafe-assignment
         const isNewSet = yield Messaging.isNewSet(data.uid, data.roomId, timestamp);
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
@@ -76,10 +98,16 @@ module.exports = function (Messaging) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         uids = yield user_1.default.blocks.filterUids(data.uid, uids);
         yield Promise.all([
+            // The next few lines calls a variable in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             Messaging.addRoomToUsers(data.roomId, uids, timestamp),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             Messaging.addMessageToUsers(data.roomId, uids, mid, timestamp),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             Messaging.markUnread(uids.filter(uid => uid !== String(data.uid)), data.roomId),
         ]);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         const messages = yield Messaging.getMessagesData([mid], data.uid, data.roomId, true);
         if (!messages || !messages[0]) {
             return null;
@@ -92,15 +120,23 @@ module.exports = function (Messaging) {
         yield plugins_1.default.hooks.fire('action:messaging.save', { message: messages[0], data: data });
         return messages[0];
     });
+    // The next line utilizes a variable in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     Messaging.addSystemMessage = (content, uid, roomId) => __awaiter(this, void 0, void 0, function* () {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         const message = yield Messaging.addMessage({
             content: content,
             uid: uid,
             roomId: roomId,
             system: 1,
         });
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         Messaging.notifyUsersInRoom(uid, roomId, message);
     });
+    // The next line utilizes a variable in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     Messaging.addRoomToUsers = (roomId, uids, timestamp) => __awaiter(this, void 0, void 0, function* () {
         if (!uids.length) {
             return;
@@ -110,6 +146,8 @@ module.exports = function (Messaging) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
         yield database_1.default.sortedSetsAdd(keys, timestamp, roomId);
     });
+    // The next line utilizes a variable in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     Messaging.addMessageToUsers = (roomId, uids, mid, timestamp) => __awaiter(this, void 0, void 0, function* () {
         if (!uids.length) {
             return;
