@@ -1,10 +1,16 @@
-'use strict';
+import * as util from 'util';
 
-import util from 'util';
+interface Module {
+    [key: string]: any;
+}
 
-module.exports = function (theModule, ignoreKeys) {
+type CallbackFunction = (err: Error | null, result?: any) => void;
+type AsyncFunction = (...args: any[]) => Promise<any>;
+
+module.exports = function (theModule: Module, ignoreKeys: string[] = []): void {
     ignoreKeys = ignoreKeys || [];
-    function isCallbackedFunction(func) {
+
+    function isCallbackedFunction(func : CallbackFunction): boolean {
         if (typeof func !== 'function') {
             return false;
         }
@@ -12,11 +18,34 @@ module.exports = function (theModule, ignoreKeys) {
         return str.includes('callback)');
     }
 
-    function isAsyncFunction(fn) {
+    function isAsyncFunction(fn : AsyncFunction): boolean {
         return fn && fn.constructor && fn.constructor.name === 'AsyncFunction';
     }
 
-    function promisifyRecursive(module) {
+    function wrapCallback(origFn: AsyncFunction, callbackFn: any) {
+        return async function wrapperCallback(...args: AsyncFunction[]) {
+            if (args.length && typeof args[args.length - 1] === 'function') {
+                const cb = args.pop();
+                args.push((err: Error | null, res?: any) => (res !== undefined ? cb(err, res) : cb(err)));
+                const result = await callbackFn(...args);
+                return result;
+            }
+            const result = await origFn(...args);
+            return result;
+        };
+    }
+
+    function wrapPromise(origFn: AsyncFunction, promiseFn: AsyncFunction) {
+        return function wrapperPromise(...args: AsyncFunction[]) {
+            if (args.length && typeof args[args.length - 1] === 'function') {
+                return origFn(...args);
+            }
+
+            return promiseFn(...args); // Type assertion here to address TypeScript error
+        };
+    }
+
+    function promisifyRecursive(module: Module | undefined): void {
         if (!module) {
             return;
         }
@@ -26,35 +55,17 @@ module.exports = function (theModule, ignoreKeys) {
             if (ignoreKeys.includes(key)) {
                 return;
             }
-            if (isAsyncFunction(module[key])) {
-                module[key] = wrapCallback(module[key], util.callbackify(module[key]));
-            } else if (isCallbackedFunction(module[key])) {
-                module[key] = wrapPromise(module[key], util.promisify(module[key]));
+            if (isAsyncFunction(module[key] as AsyncFunction)) {
+                const wrappedCallback = util.callbackify(module[key] as AsyncFunction);
+                module[key] = wrapCallback(module[key] as AsyncFunction, wrappedCallback);
+                
+            } else if (isCallbackedFunction(module[key] as CallbackFunction)) {
+                const wrappedPromise = util.promisify(module[key] as CallbackFunction);
+                module[key] = wrapPromise(module[key] as AsyncFunction, wrappedPromise);
             } else if (typeof module[key] === 'object') {
-                promisifyRecursive(module[key]);
+                promisifyRecursive(module[key] as Module);
             }
         });
-    }
-
-    function wrapCallback(origFn, callbackFn) {
-        return async function wrapperCallback(...args) {
-            if (args.length && typeof args[args.length - 1] === 'function') {
-                const cb = args.pop();
-                args.push((err, res) => (res !== undefined ? cb(err, res) : cb(err)));
-                return callbackFn(...args);
-            }
-            return origFn(...args);
-        };
-    }
-
-    function wrapPromise(origFn, promiseFn) {
-        return function wrapperPromise(...args) {
-            if (args.length && typeof args[args.length - 1] === 'function') {
-                return origFn(...args);
-            }
-
-            return promiseFn(...args);
-        };
     }
 
     promisifyRecursive(theModule);
