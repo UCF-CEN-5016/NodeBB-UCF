@@ -23,12 +23,12 @@ function forkChild(message:any, callback:(error:Error | null, result ?: any) => 
 
 const forkChildAsync = util.promisify(forkChild);
 
-exports.hash = async function (rounds, password) {
+exports.hash = async function (rounds:number, password:string) {
     password = crypto.createHash('sha512').update(password).digest('hex');
-    return await forkChildAsync({ type: 'hash', rounds: rounds, password: password });
+    return await forkChildAsync({ type: 'hash', rounds, password});
 };
 
-exports.compare = async function (password, hash, shaWrapped) {
+exports.compare = async function (password:string, hash:string, shaWrapped:boolean) {
     const fakeHash = await getFakeHash();
 
     if (shaWrapped) {
