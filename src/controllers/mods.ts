@@ -161,31 +161,47 @@ modsController.flags.detail = async function (req: BBRequest, res: Response, nex
         moderatedCids: user.getModeratedCids(req.uid),
         flagData: flags.get(req.params.flagId),
         assignees: user.getAdminsandGlobalModsandModerators(),
-        privileges: Promise.all(['global', 'admin'].map(async type => privileges[type].get(req.uid))),
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
+            @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+        */
+        privileges: Promise.all(['global', 'admin'].map(async type => await privileges[type].get(req.uid))),
     });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
     results.privileges = { ...results.privileges[0], ...results.privileges[1] };
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (!results.flagData || (!(results.isAdminOrGlobalMod || !!results.moderatedCids.length))) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return next(); // 404
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
     results.flagData.history = results.isAdminOrGlobalMod ? (await flags.getHistory(req.params.flagId)) : null;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (results.flagData.type === 'user') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         results.flagData.type_path = 'uid';
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     } else if (results.flagData.type === 'post') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         results.flagData.type_path = 'post';
     }
 
     res.render('flags/detail', Object.assign(results.flagData as object, {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         assignees: results.assignees,
         type_bool: ['post', 'user', 'empty'].reduce((memo, cur) => {
             if (cur !== 'empty') {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 memo[cur] = results.flagData.type === cur && (
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     !results.flagData.target ||
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     !!Object.keys(results.flagData.target as object).length
                 );
             } else {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 memo[cur] = !Object.keys(results.flagData.target as object).length;
             }
 
@@ -193,6 +209,7 @@ modsController.flags.detail = async function (req: BBRequest, res: Response, nex
         }, {}),
         states: Object.fromEntries(flags._states),
         title: `[[pages:flag-details, ${req.params.flagId}]]`,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         privileges: results.privileges,
         breadcrumbs: helpers.buildBreadcrumbs([
             { text: '[[pages:flags]]', url: '/flags' },
