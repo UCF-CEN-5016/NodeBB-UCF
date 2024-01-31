@@ -29,8 +29,9 @@ module.exports = function (Topics) {
             if (parseInt(uid, 10) <= 0) {
                 return tids.map(() => null);
             }
-            const scores = yield database_1.default.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
-            return scores.map(score => (score !== null ? score : null));
+            const scoresPromises = tids.map((tid) => database_1.default.sortedSetScore(`tid:${tid}:bookmarks`, uid));
+            const scores = yield Promise.all(scoresPromises);
+            return scores.map((score) => (score !== null ? score : null));
         });
     };
     Topics.setUserBookmark = function (tid, uid, index) {
@@ -47,12 +48,12 @@ module.exports = function (Topics) {
         return __awaiter(this, void 0, void 0, function* () {
             const maxIndex = yield Topics.getPostCount(tid);
             const indices = yield database_1.default.sortedSetRanks(`tid:${tid}:posts`, pids);
-            const postIndices = indices.map(i => (i === null ? 0 : i + 1));
+            const postIndices = indices.map((i) => (i === null ? 0 : i + 1));
             const minIndex = Math.min(...postIndices);
             const bookmarks = yield Topics.getTopicBookmarks(tid);
             const uidData = bookmarks
-                .map(b => ({ uid: b.value, bookmark: parseInt(b.score.toString(), 10) }))
-                .filter(data => data.bookmark >= minIndex);
+                .map((b) => ({ uid: b.value, bookmark: parseInt(b.score.toString(), 10) }))
+                .filter((data) => data.bookmark >= minIndex);
             yield async_1.default.eachLimit(uidData, 50, (data) => __awaiter(this, void 0, void 0, function* () {
                 let bookmark = Math.min(data.bookmark, maxIndex);
                 postIndices.forEach((i) => {

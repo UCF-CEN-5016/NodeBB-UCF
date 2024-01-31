@@ -8,13 +8,13 @@ interface Topics {
   setUserBookmark(tid: string, uid: string, index: number): Promise<void>;
   getTopicBookmarks(tid: string): Promise<{ value: string; score: number }[]>;
   updateTopicBookmarks(tid: string, pids: string[]): Promise<void>;
-  getPostCount(tid: string): Promise<number>; // Assuming this method exists in your Topics interface
+  getPostCount(tid: string): Promise<number>; 
 }
 
 export = function (Topics: Topics): void {
     Topics.getUserBookmark = async function (tid: string, uid: string): Promise<number | null> {
         if (parseInt(uid, 10) <= 0) {
-            return null;
+        return null;
         }
         const score = await db.sortedSetScore(`tid:${tid}:bookmarks`, uid);
         return score !== null ? score : null;
@@ -22,10 +22,14 @@ export = function (Topics: Topics): void {
 
     Topics.getUserBookmarks = async function (tids: string[], uid: string): Promise<(number | null)[]> {
         if (parseInt(uid, 10) <= 0) {
-            return tids.map(() => null);
+        return tids.map(() => null);
         }
-        const scores = await db.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
-        return scores.map(score => (score !== null ? score : null));
+
+        const scoresPromises: Promise<number | null>[] = tids.map((tid) =>
+        db.sortedSetScore(`tid:${tid}:bookmarks`, uid)
+        );
+        const scores: (number | null)[] = await Promise.all(scoresPromises);
+        return scores.map((score) => (score !== null ? score : null));
     };
 
     Topics.setUserBookmark = async function (tid: string, uid: string, index: number): Promise<void> {
@@ -37,16 +41,16 @@ export = function (Topics: Topics): void {
     };
 
     Topics.updateTopicBookmarks = async function (tid: string, pids: string[]): Promise<void> {
-        const maxIndex = await Topics.getPostCount(tid);
-        const indices = await db.sortedSetRanks(`tid:${tid}:posts`, pids);
-        const postIndices = indices.map(i => (i === null ? 0 : i + 1));
-        const minIndex = Math.min(...postIndices);
+        const maxIndex: number = await Topics.getPostCount(tid);
+        const indices: (number | null)[] = await db.sortedSetRanks(`tid:${tid}:posts`, pids);
+        const postIndices: number[] = indices.map((i) => (i === null ? 0 : i + 1));
+        const minIndex: number = Math.min(...postIndices);
 
-        const bookmarks = await Topics.getTopicBookmarks(tid);
+        const bookmarks: { value: string; score: number }[] = await Topics.getTopicBookmarks(tid);
 
-        const uidData = bookmarks
-        .map(b => ({ uid: b.value, bookmark: parseInt(b.score.toString(), 10) }))
-        .filter(data => data.bookmark >= minIndex);
+        const uidData: { uid: string; bookmark: number }[] = bookmarks
+        .map((b) => ({ uid: b.value, bookmark: parseInt(b.score.toString(), 10) }))
+        .filter((data) => data.bookmark >= minIndex);
 
         await async.eachLimit(uidData, 50, async (data: { uid: string; bookmark: number }) => {
         let bookmark: number = Math.min(data.bookmark, maxIndex);
