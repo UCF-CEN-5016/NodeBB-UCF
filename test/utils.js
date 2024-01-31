@@ -231,6 +231,9 @@ describe('Utility Methods', () => {
         done();
     });
 
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+
     it('should return false if browser is not android', (done) => {
         global.navigator = {
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36',
