@@ -1,7 +1,6 @@
 // eslint-disable-next-line import/no-import-module-exports
 import { Request, Response } from 'express';
 
-
 import user = require('../user');
 import posts = require('../posts');
 import flags = require('../flags');
@@ -17,9 +16,12 @@ interface BBRequest extends Request {
     uid: unknown;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const modsController = module.exports;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 modsController.flags = {};
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 modsController.flags.list = async function (req: BBRequest, res: Response) {
     const validFilters = ['assignee', 'state', 'reporterId', 'type', 'targetUid', 'cid', 'quick', 'page', 'perPage'];
     const validSorts = ['newest', 'oldest', 'reports', 'upvotes', 'downvotes', 'replies'];
@@ -54,7 +56,7 @@ modsController.flags.list = async function (req: BBRequest, res: Response) {
         return memo;
     }, {});
 
-    let hasFilter = !!Object.keys(filters).length;
+    let hasFilter = !!Object.keys(filters as object).length;
 
     if (res.locals.cids) {
         if (!filters.cid) {
@@ -71,8 +73,8 @@ modsController.flags.list = async function (req: BBRequest, res: Response) {
 
     // Pagination doesn't count as a filter
     if (
-        (Object.keys(filters).length === 1 && filters.hasOwnProperty('page')) ||
-        (Object.keys(filters).length === 2 && filters.hasOwnProperty('page') && filters.hasOwnProperty('perPage'))
+        (Object.keys(filters as object).length === 1 && filters.hasOwnProperty('page')) ||
+        (Object.keys(filters as object).length === 2 && filters.hasOwnProperty('page') && filters.hasOwnProperty('perPage'))
     ) {
         hasFilter = false;
     }
@@ -112,6 +114,7 @@ modsController.flags.list = async function (req: BBRequest, res: Response) {
     });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 modsController.flags.detail = async function (req: BBRequest, res: Response, next) {
     const results = await utils.promiseParallel({
         isAdminOrGlobalMod: user.isAdminOrGlobalMod(req.uid),
@@ -134,16 +137,16 @@ modsController.flags.detail = async function (req: BBRequest, res: Response, nex
         results.flagData.type_path = 'post';
     }
 
-    res.render('flags/detail', Object.assign(results.flagData, {
+    res.render('flags/detail', Object.assign(results.flagData as object, {
         assignees: results.assignees,
         type_bool: ['post', 'user', 'empty'].reduce((memo, cur) => {
             if (cur !== 'empty') {
                 memo[cur] = results.flagData.type === cur && (
                     !results.flagData.target ||
-                    !!Object.keys(results.flagData.target).length
+                    !!Object.keys(results.flagData.target as object).length
                 );
             } else {
-                memo[cur] = !Object.keys(results.flagData.target).length;
+                memo[cur] = !Object.keys(results.flagData.target as object).length;
             }
 
             return memo;
@@ -158,6 +161,7 @@ modsController.flags.detail = async function (req: BBRequest, res: Response, nex
     }));
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 modsController.postQueue = async function (req: BBRequest, res: Response, next) {
     if (!req.loggedIn) {
         return next();
