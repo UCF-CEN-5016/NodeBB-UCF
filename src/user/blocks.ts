@@ -166,6 +166,7 @@ function blockFunction(User: User) {
             const isBlocked = await User.blocks.is(targetUid, uids);
             return uids.filter((uid, index) => !isBlocked[index]);// bug
         },
+        //comment
         filter: async function (uid: string[], property: number, set: string[]) {
             // Set might also potentially be number[]
             // Given whatever is passed in, iterates through it, and removes entries made by blocked uids
