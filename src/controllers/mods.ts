@@ -221,6 +221,7 @@ modsController.flags.detail = async function (req: BBRequest, res: Response, nex
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 modsController.postQueue = async function (req: BBRequest, res: Response, next) {
     if (!req.loggedIn) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
         return next();
     }
     const { id } = req.params;
@@ -228,7 +229,9 @@ modsController.postQueue = async function (req: BBRequest, res: Response, next) 
     const page = parseInt(req.query.page as string, 10) || 1;
     const postsPerPage = 20;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     let postData = await posts.getQueuedPosts({ id: id });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [isAdmin, isGlobalMod, moderatedCids, categoriesData] = await Promise.all([
         user.isAdministrator(req.uid),
         user.isGlobalModerator(req.uid),
@@ -236,28 +239,44 @@ modsController.postQueue = async function (req: BBRequest, res: Response, next) 
         helpers.getSelectedCategory(cid),
     ]);
 
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment,
+        @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
+    */
     postData = postData.filter(p => p &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         (!categoriesData.selectedCids.length || categoriesData.selectedCids.includes(p.category.cid)) &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         (isAdmin || isGlobalMod || moderatedCids.includes(Number(p.category.cid)) || req.uid === p.user.uid));
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ({ posts: postData } = await plugins.hooks.fire('filter:post-queue.get', {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         posts: postData,
         req: req,
     }));
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const pageCount = Math.max(1, Math.ceil(postData.length / postsPerPage));
     const start = (page - 1) * postsPerPage;
     const stop = start + postsPerPage - 1;
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment,
+        @typescript-eslint/no-unsafe-call
+    */
     postData = postData.slice(start, stop + 1);
     const crumbs = [{ text: '[[pages:post-queue]]', url: id ? '/post-queue' : undefined }];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (id && postData.length) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const text = postData[0].data.tid ? '[[post-queue:reply]]' : '[[post-queue:topic]]';
         crumbs.push({ text: text, url: id ? '/post-queue' : undefined });
     }
     res.render('post-queue', {
         title: '[[pages:post-queue]]',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         posts: postData,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         isAdmin: isAdmin,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         canAccept: isAdmin || isGlobalMod || !!moderatedCids.length,
         ...categoriesData,
         allCategoriesUrl: `post-queue${helpers.buildQueryString(req.query, 'cid', '')}`,
