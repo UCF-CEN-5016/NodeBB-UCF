@@ -3,7 +3,7 @@ import fs = require('fs');
 import util = require('util');
 import path = require('path');
 import os = require('os');
-import nconf = require('nconf');// eslint-disable-next-line @no-import-module-exports
+import nconf = require('nconf');
 import { Express } from 'express';
 import chalk = require('chalk');
 
@@ -12,10 +12,14 @@ import flash = require('connect-flash');
 import bodyParser = require('body-parser');
 import cookieParser = require('cookie-parser');
 import session = require('express-session');
-import useragent = require('express-useragent');// eslint-disable-next-line @no-import-module-exports
+import useragent = require('express-useragent');
 import favicon = require('serve-favicon');
 import detector = require('spider-detector');
 import helmet from 'helmet';
+
+import { Socket } from 'net';
+import https from 'https';
+import http from 'http';
 
 import Benchpress = require('benchpressjs');
 import db = require('./database');
@@ -34,11 +38,8 @@ import auth = require('./routes/authentication');
 import helpers = require('./helpers');
 
 import promisify from './promisify';
-import { Socket } from 'net';
-import https from 'https';
-import http from 'http';
 
-const express = require('express');
+ const express = require('express');
 
 declare module 'express' {
     interface Application {
@@ -46,7 +47,7 @@ declare module 'express' {
     }
 }
 
-const app: Express & { renderAsync?: (tpl: string, data: object, callback: () => any) => Promise<string> } = express();
+const app: Express & { renderAsync?: (tpl: string, data: object, callback: () => any) => Promise<string> } = express.default();
 app.renderAsync = util.promisify(app.render.bind(app));
 let server: https.Server | http.Server;
 
