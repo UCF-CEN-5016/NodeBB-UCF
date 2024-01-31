@@ -1,4 +1,28 @@
 "use strict";
+// 'use strict';
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12,11 +36,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// 'use strict';
 // eslint-disable-next-line import/no-import-module-exports
-const cron_1 = __importDefault(require("cron"));
-// eslint-disable-next-line import/no-import-module-exports
-const winston_1 = __importDefault(require("winston"));
+const winston_1 = __importStar(require("winston"));
 // eslint-disable-next-line import/no-import-module-exports
 const nconf_1 = __importDefault(require("nconf"));
 // eslint-disable-next-line import/no-import-module-exports
@@ -25,6 +46,8 @@ const crypto_1 = __importDefault(require("crypto"));
 const util_1 = __importDefault(require("util"));
 // eslint-disable-next-line import/no-import-module-exports
 const lodash_1 = __importDefault(require("lodash"));
+// eslint-disable-next-line import/no-import-module-exports
+const cron_1 = require("cron");
 // eslint-disable-next-line import/no-import-module-exports
 const database_1 = __importDefault(require("./database"));
 // eslint-disable-next-line import/no-import-module-exports
@@ -84,39 +107,40 @@ const runJobs = nconf_1.default.get('runJobs');
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Analytics.init = function () {
-    ipCache = (0, lru_1.default)({
-        // The next line calls a function in a module that has not been updated to TS yet
-        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
-        @typescript-eslint/no-unsafe-assignment */
-        max: parseInt(meta_1.default.config['analytics:maxCache'], 10) || 500,
-        ttl: 0,
-    });
-    // The next line calls a function in a module that has not been updated to TS yet
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-    new cron_1.default('*/10 * * * * *', (() => __awaiter(this, void 0, void 0, function* () {
-        publishLocalAnalytics();
-        if (runJobs) {
-            yield sleep(2000);
+    return __awaiter(this, void 0, void 0, function* () {
+        ipCache = (0, lru_1.default)({
             // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            yield Analytics.writeData();
-        }
-    })), null, true);
-    if (runJobs) {
-        pubsub_1.default.on('analytics:publish', (data) => {
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            incrementProperties(total, data.local);
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+            @typescript-eslint/no-unsafe-assignment */
+            max: parseInt(meta_1.default.config['analytics:maxCache'], 10) || 500,
+            ttl: 0,
         });
-    }
+        // The next line calls a function in a module that has not been updated to TS yet
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+        yield new cron_1.CronJob('*/10 * * * * *', (() => __awaiter(this, void 0, void 0, function* () {
+            publishLocalAnalytics();
+            if (runJobs) {
+                yield sleep(2000);
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                yield Analytics.writeData();
+            }
+        })), null, true);
+        if (runJobs) {
+            pubsub_1.default.on('analytics:publish', (data) => {
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                incrementProperties(total, data.local);
+            });
+        }
+    });
 };
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Analytics.increment = function (keys, callback) {
     keys = Array.isArray(keys) ? keys : [keys];
     plugins_1.default.hooks.fire('action:analytics.increment', { keys: [keys] })
-        .catch(err => (err))
-        .then(() => console.log('this will succeed'));
+        .catch(() => { console.log(winston_1.error); });
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     keys.forEach((key) => {
@@ -136,8 +160,15 @@ Analytics.increment = function (keys, callback) {
     }
 };
 // The next line calls a function in a module that has not been updated to TS yet
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-Analytics.getKeys = database_1.default.getSortedSetRange('analyticsKeys', 0, -1);
+/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+@typescript-eslint/no-unsafe-assignment */
+Analytics.getKeys = function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        return yield database_1.default.getSortedSetRange('analyticsKeys', 0, -1);
+    });
+};
 // The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Analytics.pageView = function (payload) {
@@ -334,7 +365,7 @@ Analytics.getDailyStatsForSet = function (set, day, numDays) {
             // The next line calls a function in a module that has not been updated to TS yet
             /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-return */
-            daysArr.push(dayData.reduce((cur, next) => cur.concat(next)));
+            daysArr.push(dayData.reduce((cur, next) => cur + next));
             numDays -= 1;
         }
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-return */
@@ -366,11 +397,11 @@ Analytics.getSummary = function () {
             // The next line calls a function in a module that has not been updated to TS yet
             /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
-            seven: seven.reduce((sum, cur) => sum.concat(cur), 0),
+            seven: seven.reduce((sum, cur) => sum + cur, 0),
             // The next line calls a function in a module that has not been updated to TS yet
             /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
-            thirty: thirty.reduce((sum, cur) => sum.concat(cur), 0),
+            thirty: thirty.reduce((sum, cur) => sum + cur, 0),
         };
     });
 };
