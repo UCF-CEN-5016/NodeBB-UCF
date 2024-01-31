@@ -20,7 +20,8 @@ module.exports = function (Topics) {
             if (parseInt(uid, 10) <= 0) {
                 return null;
             }
-            return yield database_1.default.sortedSetScore(`tid:${tid}:bookmarks`, uid);
+            const score = yield database_1.default.sortedSetScore(`tid:${tid}:bookmarks`, uid);
+            return score !== null ? score : null;
         });
     };
     Topics.getUserBookmarks = function (tids, uid) {
@@ -28,7 +29,8 @@ module.exports = function (Topics) {
             if (parseInt(uid, 10) <= 0) {
                 return tids.map(() => null);
             }
-            return yield database_1.default.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
+            const scores = yield database_1.default.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
+            return scores.map(score => (score !== null ? score : null));
         });
     };
     Topics.setUserBookmark = function (tid, uid, index) {
