@@ -32,7 +32,7 @@ function filterCompletedRewards(uid, rewards) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const data = yield db.getSortedSetRangeByScoreWithScores(`uid:${uid}:rewards`, 0, -1, 1, '+inf');
-        const userRewards = {};
+        const userRewards = [];
         data.forEach((obj) => {
             userRewards[obj.value] = parseInt(obj.score, 10);
         });
