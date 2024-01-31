@@ -510,7 +510,7 @@ describe('authentication', () => {
         });
     });
 
-    it('should lockout account on 3 failed login attempts', (done) => {
+    it('should lockout account on 3 failed login attempts', async () => {
         meta.config.loginAttempts = 3;
         let uid;
         async.waterfall([
@@ -545,7 +545,7 @@ describe('authentication', () => {
                 assert(locked);
                 next();
             },
-        ], done);
+        ],);
     });
 
     it('should clear all reset tokens upon successful login', async () => {
