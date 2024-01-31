@@ -1,4 +1,5 @@
-'use strict';
+"use strict";
+// bookmarks.ts
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,16 +9,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const async = require('async');
-const db = require('../database');
-const user = require('../user');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+const async_1 = __importDefault(require("async"));
+const database_1 = __importDefault(require("../database"));
+const user_1 = __importDefault(require("../user"));
 module.exports = function (Topics) {
     Topics.getUserBookmark = function (tid, uid) {
         return __awaiter(this, void 0, void 0, function* () {
             if (parseInt(uid, 10) <= 0) {
                 return null;
             }
-            return yield db.sortedSetScore(`tid:${tid}:bookmarks`, uid);
+            return yield database_1.default.sortedSetScore(`tid:${tid}:bookmarks`, uid);
         });
     };
     Topics.getUserBookmarks = function (tids, uid) {
@@ -25,29 +29,29 @@ module.exports = function (Topics) {
             if (parseInt(uid, 10) <= 0) {
                 return tids.map(() => null);
             }
-            return yield db.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
+            return yield database_1.default.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
         });
     };
     Topics.setUserBookmark = function (tid, uid, index) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield db.sortedSetAdd(`tid:${tid}:bookmarks`, index, uid);
+            yield database_1.default.sortedSetAdd(`tid:${tid}:bookmarks`, index, uid);
         });
     };
     Topics.getTopicBookmarks = function (tid) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db.getSortedSetRangeWithScores(`tid:${tid}:bookmarks`, 0, -1);
+            return yield database_1.default.getSortedSetRangeWithScores(`tid:${tid}:bookmarks`, 0, -1);
         });
     };
     Topics.updateTopicBookmarks = function (tid, pids) {
         return __awaiter(this, void 0, void 0, function* () {
             const maxIndex = yield Topics.getPostCount(tid);
-            const indices = yield db.sortedSetRanks(`tid:${tid}:posts`, pids);
+            const indices = yield database_1.default.sortedSetRanks(`tid:${tid}:posts`, pids);
             const postIndices = indices.map(i => (i === null ? 0 : i + 1));
             const minIndex = Math.min(...postIndices);
             const bookmarks = yield Topics.getTopicBookmarks(tid);
-            const uidData = bookmarks.map(b => ({ uid: b.value, bookmark: parseInt(b.score, 10) }))
+            const uidData = bookmarks.map(b => ({ uid: b.value, bookmark: parseInt(b.score.toString(), 10) }))
                 .filter(data => data.bookmark >= minIndex);
-            yield async.eachLimit(uidData, 50, (data) => __awaiter(this, void 0, void 0, function* () {
+            yield async_1.default.eachLimit(uidData, 50, (data) => __awaiter(this, void 0, void 0, function* () {
                 let bookmark = Math.min(data.bookmark, maxIndex);
                 postIndices.forEach((i) => {
                     if (i < data.bookmark) {
@@ -59,7 +63,7 @@ module.exports = function (Topics) {
                 if (bookmark === data.bookmark) {
                     return;
                 }
-                const settings = yield user.getSettings(data.uid);
+                const settings = yield user_1.default.getSettings(data.uid);
                 if (settings.topicPostSort === 'most_votes') {
                     return;
                 }
