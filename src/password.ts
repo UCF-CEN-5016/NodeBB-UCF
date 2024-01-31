@@ -35,10 +35,10 @@ exports.compare = async function (password:string, hash:string, shaWrapped:boole
         password = crypto.createHash('sha512').update(password).digest('hex');
     }
 
-    return await forkChildAsync({ type: 'compare', password: password, hash: hash || fakeHash });
+    return await forkChildAsync({ type: 'compare', password, hash: hash || fakeHash });
 };
 
-let fakeHashCache;
+let fakeHashCache : string | undefined;
 async function getFakeHash() {
     if (fakeHashCache) {
         return fakeHashCache;
@@ -48,10 +48,10 @@ async function getFakeHash() {
 }
 
 // child process
-process.on('message', (msg) => {
-    if (msg.type === 'hash') {
+process.on('message', (msg:string) => {
+    if (msg === 'hash') {
         tryMethod(hashPassword, msg);
-    } else if (msg.type === 'compare') {
+    } else if (msg === 'compare') {
         tryMethod(compare, msg);
     }
 });
