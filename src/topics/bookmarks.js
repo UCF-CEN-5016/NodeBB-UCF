@@ -29,7 +29,7 @@ module.exports = function (Topics) {
             if (parseInt(uid, 10) <= 0) {
                 return tids.map(() => null);
             }
-            const scoresPromises = tids.map((tid) => database_1.default.sortedSetScore(`tid:${tid}:bookmarks`, uid));
+            const scoresPromises = tids.map((tid) => database_1.default.sortedSetScore(`tid:{tid}:bookmarks`, uid));
             const scores = yield Promise.all(scoresPromises);
             return scores.map((score) => (score !== null ? score : null));
         });
@@ -67,7 +67,7 @@ module.exports = function (Topics) {
                     return;
                 }
                 const settings = yield user_1.default.getSettings(data.uid);
-                if (settings.topicPostSort === 'most_votes') {
+                if (settings && settings.topicPostSort === 'most_votes') {
                     return;
                 }
                 yield Topics.setUserBookmark(tid, data.uid, bookmark);
