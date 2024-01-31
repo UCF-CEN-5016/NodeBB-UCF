@@ -1,4 +1,6 @@
 // eslint-disable-next-line import/no-import-module-exports
+import { Request, Response } from 'express';
+// eslint-disable-next-line import/no-import-module-exports
 import nconf from 'nconf';
 // eslint-disable-next-line import/no-import-module-exports
 import winston from 'winston';
@@ -17,18 +19,13 @@ import helpers from './helpers';
 
 const relative_path: string = nconf.get('relative_path') as string;
 
-interface CustomRequest extends Request {
-    path: string,
-    originalUrl: string
-}
-
 interface CustomError extends Error {
     status: string,
     path: string,
     code: number
 }
 
-export async function handleURIErrors(err: CustomError, req: CustomRequest, res: any, next: any) {
+export async function handleURIErrors(err: CustomError, req: Request, res: Response, next: any) {
     // Handle cases where malformed URIs are passed in
     if (err instanceof URIError) {
         const cleanPath: string = req.path.replace(new RegExp(`^${relative_path}`), '');
@@ -57,7 +54,7 @@ export async function handleURIErrors(err: CustomError, req: CustomRequest, res:
 
 // this needs to have four arguments or express treats it as `(req, res, next)`
 // don't remove `next`!
-exports.handleErrors = async function handleErrors(err: CustomError, req: CustomRequest, res: any, next: any) { // eslint-disable-line no-unused-vars
+exports.handleErrors = async function handleErrors(err: CustomError, req: Request, res: Response, next: any) { // eslint-disable-line no-unused-vars
     const cases = {
         EBADCSRFTOKEN: function () {
             winston.error(`${req.method} ${req.originalUrl}\n${err.message}`);
