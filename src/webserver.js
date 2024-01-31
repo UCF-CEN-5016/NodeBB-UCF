@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,39 +8,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const fs = require('fs');
-const util = require('util');
-const path = require('path');
-const os = require('os');
-const nconf = require('nconf');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs = require("fs");
+const util = require("util");
+const path = require("path");
+const os = require("os");
+const nconf = require("nconf");
+const chalk = require("chalk");
+const winston = require("winston");
+const flash = require("connect-flash");
+const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const useragent = require("express-useragent");
+const favicon = require("serve-favicon");
+const detector = require("spider-detector");
+const helmet_1 = __importDefault(require("helmet"));
+const Benchpress = require("benchpressjs");
+const db = require("./database");
+const analytics = require("./analytics");
+const file = require("./file");
+const emailer = require("./emailer");
+const meta = require("./meta");
+const logger = require("./logger");
+const plugins = require("./plugins");
+const flags = require("./flags");
+const topicEvents = require("./topics/events");
+const privileges = require("./privileges");
+const routes = require("./routes");
+const auth = require("./routes/authentication");
+const helpers = require("./helpers");
+const promisify_1 = __importDefault(require("./promisify"));
 const express = require('express');
-const chalk = require('chalk');
 const app = express();
-app.renderAsync = util.promisify((tpl, data, callback) => app.render(tpl, data, callback));
+app.renderAsync = util.promisify(app.render.bind(app));
 let server;
-const winston = require('winston');
-const flash = require('connect-flash');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const useragent = require('express-useragent');
-const favicon = require('serve-favicon');
-const detector = require('spider-detector');
-const helmet = require('helmet');
-const Benchpress = require('benchpressjs');
-const db = require('./database');
-const analytics = require('./analytics');
-const file = require('./file');
-const emailer = require('./emailer');
-const meta = require('./meta');
-const logger = require('./logger');
-const plugins = require('./plugins');
-const flags = require('./flags');
-const topicEvents = require('./topics/events');
-const privileges = require('./privileges');
-const routes = require('./routes');
-const auth = require('./routes/authentication');
-const helpers = require('./helpers');
 if (nconf.get('ssl')) {
     server = require('https').createServer({
         key: fs.readFileSync(nconf.get('ssl').key),
@@ -186,7 +191,7 @@ function setupHelmet(app) {
             preload: !!meta.config['hsts-preload'],
         };
     }
-    app.use(helmet(options));
+    app.use((0, helmet_1.default)(options));
 }
 function setupFavicon(app) {
     let faviconPath = meta.config['brand:favicon'] || 'favicon.ico';
@@ -280,7 +285,7 @@ exports.testSocket = function (socketPath) {
         return new Promise((resolve, reject) => {
             const testSocket = new net.Socket();
             testSocket.on('error', (err) => {
-                if (err.code !== 'ECONNREFUSED') {
+                if (err.name !== 'ECONNREFUSED') {
                     return reject(err);
                 }
                 // The socket was stale, kick it out of the way
@@ -298,4 +303,4 @@ exports.testSocket = function (socketPath) {
         });
     });
 };
-require('./promisify')(exports);
+(0, promisify_1.default)(exports);

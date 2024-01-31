@@ -1,42 +1,52 @@
 
-'use strict';
+import fs = require('fs');
+import util = require('util');
+import path = require('path');
+import os = require('os');
+import nconf = require('nconf');
+import { Express } from 'express';
+import chalk = require('chalk');
 
-const fs = require('fs');
-const util = require('util');
-const path = require('path');
-const os = require('os');
-const nconf = require('nconf');
+import winston = require('winston');
+import flash = require('connect-flash');
+import bodyParser = require('body-parser');
+import cookieParser = require('cookie-parser');
+import session = require('express-session');
+import useragent = require('express-useragent');
+import favicon = require('serve-favicon');
+import detector = require('spider-detector');
+import helmet from 'helmet';
+
+import Benchpress = require('benchpressjs');
+import db = require('./database');
+import analytics = require('./analytics');
+import file = require('./file');
+import emailer = require('./emailer');
+import meta = require('./meta');
+import logger = require('./logger');
+import plugins = require('./plugins');
+import flags = require('./flags');
+import topicEvents = require('./topics/events');
+import privileges = require('./privileges');
+import routes = require('./routes');
+import auth = require('./routes/authentication');
+
+import helpers = require('./helpers');
+
+import promisify from './promisify';
+import net from 'net';
+
 const express = require('express');
-const chalk = require('chalk');
 
-const app = express();
-app.renderAsync = util.promisify((tpl, data, callback) => app.render(tpl, data, callback));
+declare module 'express' {
+    interface Application {
+        renderAsync: (tpl: string, data: object) => Promise<string>;
+    }
+}
+
+const app: Express & { renderAsync?: (tpl: string, data: object, callback: Function) => Promise<string> } = express();
+app.renderAsync = util.promisify(app.render.bind(app));
 let server;
-const winston = require('winston');
-const flash = require('connect-flash');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const useragent = require('express-useragent');
-const favicon = require('serve-favicon');
-const detector = require('spider-detector');
-const helmet = require('helmet');
-
-const Benchpress = require('benchpressjs');
-const db = require('./database');
-const analytics = require('./analytics');
-const file = require('./file');
-const emailer = require('./emailer');
-const meta = require('./meta');
-const logger = require('./logger');
-const plugins = require('./plugins');
-const flags = require('./flags');
-const topicEvents = require('./topics/events');
-const privileges = require('./privileges');
-const routes = require('./routes');
-const auth = require('./routes/authentication');
-
-const helpers = require('./helpers');
 
 if (nconf.get('ssl')) {
     server = require('https').createServer({
@@ -191,7 +201,7 @@ interface HelmetOptions {
     crossOriginOpenerPolicy: { policy: any; };
     crossOriginResourcePolicy: { policy: any; };
     referrerPolicy: { policy: string; };
-    crossOriginEmbedderPolicy?: boolean | { policy: any; };
+    crossOriginEmbedderPolicy?: boolean;
     hsts?: {
         maxAge: any;
         includeSubDomains: boolean;
@@ -321,9 +331,9 @@ exports.testSocket = async function (socketPath) {
         return;
     }
     return new Promise<void>((resolve, reject) => {
-        const testSocket = new net.Socket();
+        const testSocket: net.Socket = new net.Socket();
         testSocket.on('error', (err) => {
-            if (err.code !== 'ECONNREFUSED') {
+            if (err.name !== 'ECONNREFUSED') {
                 return reject(err);
             }
             // The socket was stale, kick it out of the way
@@ -338,4 +348,4 @@ exports.testSocket = async function (socketPath) {
     });
 };
 
-require('./promisify')(exports);
+promisify(exports);
