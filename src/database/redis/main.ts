@@ -1,37 +1,58 @@
-'use strict';
+// 'use strict';
 
-module.exports = function (module) {
-    const helpers = require('./helpers');
+import RedisClient from 'ioredis'; // Assuming you have the appropriate type definitions for RedisClient
 
-    module.flushdb = async function () {
-        await module.client.send_command('flushdb', []);
+interface Module {
+  client: RedisClient;
+  objectCache: any; // Replace with the actual type of objectCache if available
+  flushdb: () => Promise<void>;
+  emptydb: () => Promise<void>;
+  exists: (key: string | string[]) => Promise<boolean | boolean[]>;
+  scan: (params: { match: string }) => Promise<string[]>;
+  delete: (key: string) => Promise<void>;
+  deleteAll: (keys: string[]) => Promise<void>;
+  get: (key: string) => Promise<string | null>;
+  set: (key: string, value: string) => Promise<void>;
+  increment: (key: string) => Promise<number>;
+  rename: (oldKey: string, newKey: string) => Promise<void>;
+  type: (key: string) => Promise<string | null>;
+  expire: (key: string, seconds: number) => Promise<void>;
+  expireAt: (key: string, timestamp: number) => Promise<void>;
+  pexpire: (key: string, ms: number) => Promise<void>;
+  pexpireAt: (key: string, timestamp: number) => Promise<void>;
+  ttl: (key: string) => Promise<number>;
+  pttl: (key: string) => Promise<number>;
+}
+
+module.exports = (module: Module) => {
+    module.flushdb = async () => {
+        await module.client.flushall();
     };
 
-    module.emptydb = async function () {
+    module.emptydb = async () => {
         await module.flushdb();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         module.objectCache.reset();
     };
 
-    module.exists = async function (key) {
+    module.exists = async (key) => {
         if (Array.isArray(key)) {
-            const batch = module.client.batch();
-            key.forEach(key => batch.exists(key));
-            const data = await helpers.execBatch(batch);
+            const data = await Promise.all(key.map(k => module.client.exists(k)));
             return data.map(exists => exists === 1);
         }
         const exists = await module.client.exists(key);
         return exists === 1;
     };
 
-    module.scan = async function (params) {
+    module.scan = async (params) => {
         let cursor = '0';
-        let returnData = [];
-        const seen = {};
+        let returnData: string[] = [];
+        const seen: { [key: string]: number } = {};
         do {
             /* eslint-disable no-await-in-loop */
             const res = await module.client.scan(cursor, 'MATCH', params.match, 'COUNT', 10000);
             cursor = res[0];
-            const values = res[1].filter((value) => {
+            const values = res[1].filter((value: string) => {
                 const isSeen = !!seen[value];
                 if (!isSeen) {
                     seen[value] = 1;
@@ -43,69 +64,64 @@ module.exports = function (module) {
         return returnData;
     };
 
-    module.delete = async function (key) {
+    module.delete = async (key) => {
         await module.client.del(key);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         module.objectCache.del(key);
     };
 
-    module.deleteAll = async function (keys) {
+    module.deleteAll = async (keys) => {
         if (!Array.isArray(keys) || !keys.length) {
             return;
         }
         await module.client.del(keys);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         module.objectCache.del(keys);
     };
 
-    module.get = async function (key) {
-        return await module.client.get(key);
-    };
+    module.get = async key => await module.client.get(key);
 
-    module.set = async function (key, value) {
+    module.set = async (key, value) => {
         await module.client.set(key, value);
     };
 
-    module.increment = async function (key) {
-        return await module.client.incr(key);
-    };
+    module.increment = async key => await module.client.incr(key);
 
-    module.rename = async function (oldKey, newKey) {
+    module.rename = async (oldKey, newKey) => {
         try {
             await module.client.rename(oldKey, newKey);
         } catch (err) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             if (err && err.message !== 'ERR no such key') {
                 throw err;
             }
         }
-
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         module.objectCache.del([oldKey, newKey]);
     };
 
-    module.type = async function (key) {
+    module.type = async (key) => {
         const type = await module.client.type(key);
         return type !== 'none' ? type : null;
     };
 
-    module.expire = async function (key, seconds) {
+    module.expire = async (key, seconds) => {
         await module.client.expire(key, seconds);
     };
 
-    module.expireAt = async function (key, timestamp) {
+    module.expireAt = async (key, timestamp) => {
         await module.client.expireat(key, timestamp);
     };
 
-    module.pexpire = async function (key, ms) {
+    module.pexpire = async (key, ms) => {
         await module.client.pexpire(key, ms);
     };
 
-    module.pexpireAt = async function (key, timestamp) {
+    module.pexpireAt = async (key, timestamp) => {
         await module.client.pexpireat(key, timestamp);
     };
 
-    module.ttl = async function (key) {
-        return await module.client.ttl(key);
-    };
+    module.ttl = async key => await module.client.ttl(key);
 
-    module.pttl = async function (key) {
-        return await module.client.pttl(key);
-    };
+    module.pttl = async key => await module.client.pttl(key);
 };
