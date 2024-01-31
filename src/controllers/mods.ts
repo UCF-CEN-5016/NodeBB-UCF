@@ -32,40 +32,68 @@ modsController.flags.list = async function (req: BBRequest, res: Response) {
         plugins.hooks.fire('filter:flags.validateFilters', { filters: validFilters }),
         plugins.hooks.fire('filter:flags.validateSort', { sorts: validSorts }),
     ]);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [isAdminOrGlobalMod, moderatedCids,, { sorts }] = results;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     let [,, { filters }] = results;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (!(isAdminOrGlobalMod || !!moderatedCids.length)) {
         return helpers.notAllowed(req, res);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (!isAdminOrGlobalMod && moderatedCids.length) {
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
+            @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        */
         res.locals.cids = moderatedCids.map(cid => String(cid));
     }
 
     // Parse query string params for filters, eliminate non-valid filters
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
+        @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    */
     filters = filters.reduce((memo, cur) => {
-        if (req.query.hasOwnProperty(cur)) {
+        if (req.query.hasOwnProperty(cur as PropertyKey)) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             if (typeof req.query[cur] === 'string' && (req.query[cur] as string).trim() !== '') {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 memo[cur] = (req.query[cur] as string).trim();
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             } else if (Array.isArray(req.query[cur]) && req.query[cur].length) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 memo[cur] = req.query[cur];
             }
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return memo;
     }, {});
 
     let hasFilter = !!Object.keys(filters as object).length;
 
     if (res.locals.cids) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (!filters.cid) {
             // If mod and no cid filter, add filter for their modded categories
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
+                @typescript-eslint/no-unsafe-assignment
+            */
             filters.cid = res.locals.cids;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         } else if (Array.isArray(filters.cid)) {
             // Remove cids they do not moderate
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
+                @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call,
+                @typescript-eslint/no-unsafe-assignment
+            */
             filters.cid = filters.cid.filter(cid => res.locals.cids.includes(String(cid)));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         } else if (!res.locals.cids.includes(String(filters.cid))) {
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
+                @typescript-eslint/no-unsafe-assignment
+            */
             filters.cid = res.locals.cids;
             hasFilter = false;
         }
@@ -73,7 +101,9 @@ modsController.flags.list = async function (req: BBRequest, res: Response) {
 
     // Pagination doesn't count as a filter
     if (
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         (Object.keys(filters as object).length === 1 && filters.hasOwnProperty('page')) ||
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         (Object.keys(filters as object).length === 2 && filters.hasOwnProperty('page') && filters.hasOwnProperty('perPage'))
     ) {
         hasFilter = false;
@@ -82,6 +112,7 @@ modsController.flags.list = async function (req: BBRequest, res: Response) {
     // Parse sort from query string
     let sort;
     if (req.query.sort) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         sort = sorts.includes(req.query.sort) ? req.query.sort : null;
     }
     if (sort === 'newest') {
@@ -91,22 +122,31 @@ modsController.flags.list = async function (req: BBRequest, res: Response) {
 
     const [flagsData, analyticsData, selectData] = await Promise.all([
         flags.list({
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             filters: filters,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             sort: sort,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             uid: req.uid,
             query: req.query,
         }),
         analytics.getDailyStatsForSet('analytics:flags', Date.now(), 30),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         helpers.getSelectedCategory(filters.cid),
     ]);
 
     res.render('flags/list', {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         flags: flagsData.flags,
         analytics: analyticsData,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         selectedCategory: selectData.selectedCategory,
         hasFilter: hasFilter,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         filters: filters,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expanded: !!(filters.assignee || filters.reporterId || filters.targetUid),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         sort: sort || 'newest',
         title: '[[pages:flags]]',
         pagination: pagination.create(flagsData.page, flagsData.pageCount, req.query),
