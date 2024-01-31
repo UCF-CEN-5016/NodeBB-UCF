@@ -2376,6 +2376,7 @@ describe('Topic\'s', () => {
             ], done());
         });
     });
+    //
 
     describe('tag privilege', () => {
         let uid;
