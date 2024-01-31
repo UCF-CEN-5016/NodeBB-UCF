@@ -268,7 +268,7 @@ Emailer.send = async (template, uid, params) => {
 };
 
 Emailer.sendToEmail = async (template, email, language, params) => {
-    const lang = language || meta.config.defaultLang || 'en-GB';
+    const lang = language || meta.configs.defaultLang || 'en-GB';
     const unsubscribable = ['digest', 'notification'];
 
     // Digests and notifications can be one-click unsubbed
