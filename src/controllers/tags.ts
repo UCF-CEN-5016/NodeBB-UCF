@@ -10,10 +10,14 @@ import utils from '../utils';
 import helpers from './helpers';
 import { Request, Response } from 'express';
 
-export const tagsController: any = {};
+export const tagsController:any = {};
+
+
+
 interface customeRequest extends Request {
-    uid?: number; // Assuming uid is a number, change the type as needed
+    uid?: number;
   }
+
 
 tagsController.getTag = async function (req: customeRequest, res: Response): Promise<void> {
     const tag = validator.escape(utils.cleanUpTag(req.params.tag, meta.config.maximumTagLength));
