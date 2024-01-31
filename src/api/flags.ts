@@ -1,65 +1,65 @@
 // 'use strict';
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
+
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
 const user = require('../user');
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
 const flags = require('../flags');
+
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const flagsApi = module.exports;
+
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-flagsApi.create = (caller, data) => __awaiter(this, void 0, void 0, function* () {
-    const required = ['type', 'id', 'reason'];
+flagsApi.create = async (caller: { uid: number }, data: { type: string; id: number; reason: string }) => {
+    const required: string[] = ['type', 'id', 'reason'];
     if (!required.every(prop => !!data[prop])) {
         throw new Error('[[error:invalid-data]]');
     }
-    const { type, id, reason } = data;
+
+    const { type, id, reason }: { type: string; id: number; reason: string } = data;
+
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    yield flags.validate({
+    await flags.validate({
         uid: caller.uid,
         type: type,
         id: id,
     });
+
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-    const flagObj = yield flags.create(type, id, caller.uid, reason);
+    const flagObj = await flags.create(type, id, caller.uid, reason);
+
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     flags.notify(flagObj, caller.uid);
+
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return flagObj;
-});
+};
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-flagsApi.update = (caller, data) => __awaiter(this, void 0, void 0, function* () {
+flagsApi.update = async (caller: { uid: number }, data: {flagId: number}) => {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    const allowed = yield user.isPrivileged(caller.uid);
+    const allowed: boolean = await user.isPrivileged(caller.uid) as boolean;
     if (!allowed) {
         throw new Error('[[error:no-privileges]]');
     }
+
     const { flagId } = data;
     delete data.flagId;
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    yield flags.update(flagId, caller.uid, data);
+    await flags.update(flagId, caller.uid, data);
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
-    return yield flags.getHistory(flagId);
-});
+    return await flags.getHistory(flagId);
+};
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-flagsApi.appendNote = (caller, data) => __awaiter(this, void 0, void 0, function* () {
+flagsApi.appendNote = async (caller: { uid: number }, data: {datetime: number, flagId: number, note: string}) => {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    const allowed = yield user.isPrivileged(caller.uid);
+    const allowed: boolean = await user.isPrivileged(caller.uid) as boolean;
     if (!allowed) {
         throw new Error('[[error:no-privileges]]');
     }
@@ -67,13 +67,13 @@ flagsApi.appendNote = (caller, data) => __awaiter(this, void 0, void 0, function
         try {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-            const note = yield flags.getNote(data.flagId, data.datetime);
+            const note = await flags.getNote(data.flagId, data.datetime);
+
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             if (note.uid !== caller.uid) {
                 throw new Error('[[error:no-privileges]]');
             }
-        }
-        catch (e) {
+        } catch (e) {
             // Okay if not does not exist in database
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             if (e.message !== '[[error:invalid-data]]') {
@@ -83,9 +83,10 @@ flagsApi.appendNote = (caller, data) => __awaiter(this, void 0, void 0, function
     }
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    yield flags.appendNote(data.flagId, caller.uid, data.note, data.datetime);
+    await flags.appendNote(data.flagId, caller.uid, data.note, data.datetime);
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const [notes, history] = yield Promise.all([
+    const [notes, history] = await Promise.all([
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         flags.getNotes(data.flagId),
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -93,27 +94,27 @@ flagsApi.appendNote = (caller, data) => __awaiter(this, void 0, void 0, function
     ]);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { notes: notes, history: history };
-});
+};
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-flagsApi.deleteNote = (caller, data) => __awaiter(this, void 0, void 0, function* () {
+flagsApi.deleteNote = async (caller: {uid: number}, data: {flagId: number, datetime: number}) => {
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-    const note = yield flags.getNote(data.flagId, data.datetime);
+    const note = await flags.getNote(data.flagId, data.datetime);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (note.uid !== caller.uid) {
         throw new Error('[[error:no-privileges]]');
     }
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    yield flags.deleteNote(data.flagId, data.datetime);
+    await flags.deleteNote(data.flagId, data.datetime);
     // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
-    yield flags.appendHistory(data.flagId, caller.uid, {
+    await flags.appendHistory(data.flagId, caller.uid, {
         notes: '[[flags:note-deleted]]',
         datetime: Date.now(),
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const [notes, history] = yield Promise.all([
+    const [notes, history] = await Promise.all([
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         flags.getNotes(data.flagId),
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -121,4 +122,4 @@ flagsApi.deleteNote = (caller, data) => __awaiter(this, void 0, void 0, function
     ]);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { notes: notes, history: history };
-});
+};
