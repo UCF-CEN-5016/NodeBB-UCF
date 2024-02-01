@@ -4,13 +4,19 @@ import * as utils from './utils';
 import { paths } from './constants';
 import * as plugins from './plugins';
 
+export interface Language {
+    code: string;
+    name: string;
+    dir: string;
+}
+
 export const Languages: Record<string, any> = {};
 const languagesPath: string = path.join(__dirname, '../build/public/language');
 
 const files: string[] = fs.readdirSync(path.join(paths.nodeModules, '/timeago/locales'));
 Languages.timeagoCodes = files.filter((f) => f.startsWith('jquery.timeago')).map((f) => f.split('.')[2]);
 
-let listCache: Array<{ code: string; name: string; dir: string }> | null = null;
+let listCache: Array<Language> | null = null;
 let codeCache: string[] | null = null;
 
 Languages.get = async function (language: string, namespace: string): Promise<any> {
@@ -45,19 +51,19 @@ Languages.listCodes = async function (): Promise<string[]> {
     }
 };
 
-Languages.list = async function (): Promise<Array<{ code: string; name: string; dir: string }>> {
+Languages.list = async function (): Promise<Array<Language>> {
     if (listCache && listCache.length) {
         return listCache;
     }
 
     const codes: string[] = await Languages.listCodes();
 
-    let languages: Array<{ code: string; name: string; dir: string }> = await Promise.all(
+    let languages: Array<Language> = await Promise.all(
         codes.map(async (folder: string) => {
             try {
                 const configPath: string = path.join(languagesPath, folder, 'language.json');
                 const file: string = await fs.promises.readFile(configPath, 'utf8');
-                const lang: { code: string; name: string; dir: string } = JSON.parse(file);
+                const lang: Language = JSON.parse(file);
                 return lang;
             } catch (err) {
                 if (err.code === 'ENOENT') {
@@ -84,3 +90,5 @@ Languages.userTimeagoCode = async function (userLang: string): Promise<string> {
 };
 
 require('./promisify')(Languages);
+
+export default Languages;
