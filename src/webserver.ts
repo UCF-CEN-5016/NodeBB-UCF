@@ -4,7 +4,7 @@ import util = require('util');
 import path = require('path');
 import os = require('os');
 import nconf = require('nconf');
-import { Express } from 'express';
+import express = require('express');
 import chalk = require('chalk');
 
 import winston = require('winston');
@@ -16,6 +16,10 @@ import useragent = require('express-useragent');
 import favicon = require('serve-favicon');
 import detector = require('spider-detector');
 import helmet from 'helmet';
+
+import { Socket } from 'net';
+import https = require('https');
+import http = require('http');
 
 import Benchpress = require('benchpressjs');
 import db = require('./database');
@@ -32,13 +36,8 @@ import routes = require('./routes');
 import auth = require('./routes/authentication');
 
 import helpers = require('./helpers');
-
 import promisify from './promisify';
-import { Socket } from 'net';
-import https from 'https';
-import http from 'http';
 
-const express = require('express');
 
 declare module 'express' {
     interface Application {
@@ -46,7 +45,7 @@ declare module 'express' {
     }
 }
 
-const app: Express & { renderAsync?: (tpl: string, data: object, callback: () => any) => Promise<string> } = express();
+const app: express.Express & { renderAsync?: (tpl: string, data: object, callback: () => any) => Promise<string> } = express();
 app.renderAsync = util.promisify(app.render.bind(app));
 let server: https.Server | http.Server;
 

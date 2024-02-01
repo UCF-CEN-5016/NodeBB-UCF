@@ -17,6 +17,7 @@ const util = require("util");
 const path = require("path");
 const os = require("os");
 const nconf = require("nconf");
+const express = require("express");
 const chalk = require("chalk");
 const winston = require("winston");
 const flash = require("connect-flash");
@@ -27,6 +28,9 @@ const useragent = require("express-useragent");
 const favicon = require("serve-favicon");
 const detector = require("spider-detector");
 const helmet_1 = __importDefault(require("helmet"));
+const net_1 = require("net");
+const https = require("https");
+const http = require("http");
 const Benchpress = require("benchpressjs");
 const db = require("./database");
 const analytics = require("./analytics");
@@ -42,21 +46,17 @@ const routes = require("./routes");
 const auth = require("./routes/authentication");
 const helpers = require("./helpers");
 const promisify_1 = __importDefault(require("./promisify"));
-const net_1 = require("net");
-const https_1 = __importDefault(require("https"));
-const http_1 = __importDefault(require("http"));
-const express = require('express');
 const app = express();
 app.renderAsync = util.promisify(app.render.bind(app));
 let server;
 if (nconf.get('ssl')) {
-    server = https_1.default.createServer({
+    server = https.createServer({
         key: fs.readFileSync(nconf.get('ssl').key),
         cert: fs.readFileSync(nconf.get('ssl').cert),
     }, app);
 }
 else {
-    server = http_1.default.createServer(app);
+    server = http.createServer(app);
 }
 module.exports.server = server;
 module.exports.app = app;
