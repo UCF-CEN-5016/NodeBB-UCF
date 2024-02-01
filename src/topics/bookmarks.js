@@ -36,26 +36,25 @@ const db = __importStar(require("../database"));
 const user = __importStar(require("../user"));
 module.exports = function (Topics) {
     Topics.getUserBookmark = function (tid, uid) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            if (parseInt(uid.toString(), 10) <= 0 || isNaN(tid) || isNaN(uid)) {
+            if (parseInt(uid.toString(), 10) <= 0) {
                 return null;
             }
-            return (yield db.sortedSetScore(`tid:${tid}:bookmarks`, uid)) || null;
+            return (_a = (yield db.sortedSetScore(`tid:${tid}:bookmarks`, uid))) !== null && _a !== void 0 ? _a : null;
         });
     };
     Topics.getUserBookmarks = function (tids, uid) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (parseInt(uid.toString(), 10) <= 0 || tids.some(isNaN) || isNaN(uid)) {
+            if (parseInt(uid.toString(), 10) <= 0) {
                 return tids.map(() => null);
             }
-            return yield db.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
+            const scores = yield db.sortedSetsScore(tids.map((tid) => `tid:${tid}:bookmarks`), uid);
+            return scores.map((score) => score !== null && score !== void 0 ? score : null);
         });
     };
     Topics.setUserBookmark = function (tid, uid, index) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (isNaN(tid) || isNaN(uid) || isNaN(index)) {
-                throw new Error('Invalid input');
-            }
             yield db.sortedSetAdd(`tid:${tid}:bookmarks`, index, uid);
         });
     };
@@ -68,12 +67,15 @@ module.exports = function (Topics) {
         return __awaiter(this, void 0, void 0, function* () {
             const maxIndex = yield Topics.getPostCount(tid);
             const indices = yield db.sortedSetRanks(`tid:${tid}:posts`, pids);
-            const postIndices = indices.map(i => (i === null ? 0 : i + 1));
+            const postIndices = indices.map((i) => (i === null ? 0 : i + 1));
             const minIndex = Math.min(...postIndices);
             const bookmarks = yield Topics.getTopicBookmarks(tid);
             const uidData = bookmarks
-                .map(b => ({ uid: b.value, bookmark: parseInt(b.score.toString(), 10) }))
-                .filter(data => data.bookmark >= minIndex);
+                .map((b) => ({
+                uid: b.value,
+                bookmark: parseInt(b.score.toString(), 10),
+            }))
+                .filter((data) => data.bookmark >= minIndex);
             yield async.eachLimit(uidData, 50, (data) => __awaiter(this, void 0, void 0, function* () {
                 let bookmark = Math.min(data.bookmark, maxIndex);
                 postIndices.forEach((i) => {
@@ -87,7 +89,7 @@ module.exports = function (Topics) {
                     return;
                 }
                 const settings = yield user.getSettings(data.uid);
-                if (settings.topicPostSort === 'most_votes') {
+                if (settings.topicPostSort === "most_votes") {
                     return;
                 }
                 yield Topics.setUserBookmark(tid, data.uid, bookmark);
