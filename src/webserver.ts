@@ -15,9 +15,9 @@ import session = require('express-session');
 import useragent = require('express-useragent');
 import favicon = require('serve-favicon');
 import detector = require('spider-detector');
-import helmet from 'helmet';
+import helmet = require('helmet');
 
-import { Socket } from 'net';
+import net = require('net');
 import https = require('https');
 import http = require('http');
 
@@ -36,7 +36,7 @@ import routes = require('./routes');
 import auth = require('./routes/authentication');
 
 import helpers = require('./helpers');
-import promisify from './promisify';
+import promisify = require('./promisify');
 
 
 declare module 'express' {
@@ -73,7 +73,7 @@ server.on('error', (err) => {
 
 // see https://github.com/isaacs/server-destroy/blob/master/index.js
 const connections = {};
-server.on('connection', (conn: Socket) => {
+server.on('connection', (conn: net.Socket) => {
     const key = `${conn.remoteAddress}:${conn.remotePort}`;
     connections[key] = conn;
     conn.on('close', () => {
@@ -229,7 +229,7 @@ function setupHelmet(app: any) {
         };
     }
 
-    app.use(helmet(options));
+    app.use(helmet.default(options));
 }
 
 
@@ -329,7 +329,7 @@ exports.testSocket = async function (socketPath: string) {
         return;
     }
     return new Promise<void>((resolve, reject) => {
-        const testSocket: Socket = new Socket();
+        const testSocket: net.Socket = new net.Socket();
         testSocket.on('error', (err) => {
             if (err.name !== 'ECONNREFUSED') {
                 return reject(err);

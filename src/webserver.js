@@ -8,9 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const util = require("util");
@@ -27,8 +24,8 @@ const session = require("express-session");
 const useragent = require("express-useragent");
 const favicon = require("serve-favicon");
 const detector = require("spider-detector");
-const helmet_1 = __importDefault(require("helmet"));
-const net_1 = require("net");
+const helmet = require("helmet");
+const net = require("net");
 const https = require("https");
 const http = require("http");
 const Benchpress = require("benchpressjs");
@@ -45,7 +42,7 @@ const privileges = require("./privileges");
 const routes = require("./routes");
 const auth = require("./routes/authentication");
 const helpers = require("./helpers");
-const promisify_1 = __importDefault(require("./promisify"));
+const promisify = require("./promisify");
 const app = express();
 app.renderAsync = util.promisify(app.render.bind(app));
 let server;
@@ -194,7 +191,7 @@ function setupHelmet(app) {
             preload: !!meta.config['hsts-preload'],
         };
     }
-    app.use((0, helmet_1.default)(options));
+    app.use(helmet.default(options));
 }
 function setupFavicon(app) {
     let faviconPath = meta.config['brand:favicon'] || 'favicon.ico';
@@ -283,7 +280,7 @@ exports.testSocket = function (socketPath) {
             return;
         }
         return new Promise((resolve, reject) => {
-            const testSocket = new net_1.Socket();
+            const testSocket = new net.Socket();
             testSocket.on('error', (err) => {
                 if (err.name !== 'ECONNREFUSED') {
                     return reject(err);
@@ -303,4 +300,4 @@ exports.testSocket = function (socketPath) {
         });
     });
 };
-(0, promisify_1.default)(exports);
+promisify(exports);
