@@ -1151,7 +1151,7 @@ describe('Topic\'s', () => {
             });
         });
 
-        it('should not update the user\'s bookmark', (done) => {
+        it('should not update the user\'s bookmark', () => {
             async.waterfall([
                 function (next) {
                     socketTopics.createTopicFromPosts({ uid: topic.userId }, {
@@ -1167,10 +1167,10 @@ describe('Topic\'s', () => {
                     assert.equal(originalBookmark, bookmark);
                     next();
                 },
-            ], done);
+            ]);
         });
 
-        it('should update the user\'s bookmark ', (done) => {
+        it('should update the user\'s bookmark ', () => {
             async.waterfall([
                 function (next) {
                     topics.createTopicFromPosts(
@@ -1188,7 +1188,7 @@ describe('Topic\'s', () => {
                     assert.equal(originalBookmark - 2, bookmark);
                     next();
                 },
-            ], done);
+            ]);
         });
 
         it('should properly update topic vote count after forking', async () => {
