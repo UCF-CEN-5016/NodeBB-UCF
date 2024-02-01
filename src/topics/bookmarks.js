@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -37,7 +37,7 @@ const user = __importStar(require("../user"));
 module.exports = function (Topics) {
     Topics.getUserBookmark = function (tid, uid) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (parseInt(uid.toString(), 10) <= 0) {
+            if (parseInt(uid.toString(), 10) <= 0 || isNaN(tid) || isNaN(uid)) {
                 return null;
             }
             return yield db.sortedSetScore(`tid:${tid}:bookmarks`, uid);
@@ -45,7 +45,7 @@ module.exports = function (Topics) {
     };
     Topics.getUserBookmarks = function (tids, uid) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (parseInt(uid.toString(), 10) <= 0) {
+            if (parseInt(uid.toString(), 10) <= 0 || tids.some(isNaN) || isNaN(uid)) {
                 return tids.map(() => null);
             }
             return yield db.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
@@ -53,6 +53,9 @@ module.exports = function (Topics) {
     };
     Topics.setUserBookmark = function (tid, uid, index) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (isNaN(tid) || isNaN(uid) || isNaN(index)) {
+                throw new Error('Invalid input');
+            }
             yield db.sortedSetAdd(`tid:${tid}:bookmarks`, index, uid);
         });
     };
