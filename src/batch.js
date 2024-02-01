@@ -36,9 +36,9 @@ const database_1 = __importDefault(require("./database"));
 const utils_1 = __importDefault(require("./utils"));
 const DEFAULT_BATCH_SIZE = 100;
 const sleep = util_1.default.promisify(setTimeout);
-function processSortedSet(setKey, process, options) {
+function processSortedSet(setKey, process, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
-        // options = options || {};
+        options = options || {};
         if (typeof process !== 'function') {
             throw new Error('[[error:process-not-a-function]]');
         }

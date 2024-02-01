@@ -13,20 +13,20 @@ const DEFAULT_BATCH_SIZE = 100;
 const sleep = util.promisify(setTimeout);
 
 interface ProcessSortedSetOptions {
-    progress: { total: number };
-    batch: number;
-    withScores: boolean;
-    doneIf: (start: number, stop: number, ids: string[]) => boolean;
-    alwaysStartAt: number;
-    interval: number;
+    progress?: { total?: number };
+    batch?: number;
+    withScores?: boolean;
+    doneIf?: (start: number, stop: number, ids: string[]) => boolean;
+    alwaysStartAt?: number;
+    interval?: number;
 }
 
 export async function processSortedSet(
     setKey: string,
     process: (...args: unknown[]) => unknown,
-    options: ProcessSortedSetOptions,
+    options: ProcessSortedSetOptions = {},
 ): Promise<unknown> {
-    // options = options || {};
+    options = options || {};
 
     if (typeof process !== 'function') {
         throw new Error('[[error:process-not-a-function]]');
