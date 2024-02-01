@@ -1,7 +1,7 @@
-// 'use strict';
+'use strict';
 
-//supressed errors include modules that have been imported from another file adding the module.export 
-//in allows this to work but still "unsafe...any type" error. Typing async functions are causing issues.
+// supressed errors include modules that have been imported from another file adding the module.export
+// in allows this to work but still "unsafe...any type" error. Typing async functions are causing issues.
 import db = require('../database');
 import user = require('../user');
 
@@ -15,10 +15,8 @@ interface Group{
 }
 
 
-export default function Groups() {
-    const getUsersFromSet = async function () {
-        let set:any;
-        let fields:string[];
+module.exports = function (Groups: any) {
+    const getUsersFromSet = async function (set:string, fields:string[]) {
         const uids: string[] = await db.getSetMembers(set);
         if (fields) {
             return await user.getUsersFields(uids, fields);
@@ -26,41 +24,30 @@ export default function Groups() {
         return await user.getUsersData(uids);
     };
 
-    const getUserGroups = async function () {
-        let uids: string[];
+    const getUserGroups = async function (uids: string[]) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         return await Groups.getUserGroupsFromSet('groups:visible:createtime', uids);
     };
-        // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    const getUserGroupsFromSet = async function () {
-        let set: any;
-        let uids: string[];
+    
+    const getUserGroupsFromSet = async function (set:string, uids:string[]) {
         const memberOf:string[] = await Groups.getUserGroupMembership(set, uids);
-        // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         return await Promise.all(memberOf.map(memberOf => Groups.getGroupsData(memberOf)));
     };
 
-    const getUserGroupMembership = async function () {
-        let set: any;
-        let uids: string[];
+    const getUserGroupMembership = async function (set:string, uids:string[]) {
         const groupNames:string[] = await db.getSortedSetRevRange(set, 0, -1);
-        return await Promise.all(uids.map(uid => findUserGroups()));
+        return await Promise.all(uids.map(uid => findUserGroups(uid, groupNames)));
     };
 
-    async function findUserGroups() {
-        let uid: string;
-        let groupNames:string[];
-    // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const isMembers:boolean[] = await Groups.isMemberOfGroups(uid, groupNames);
-        return groupNames.filter((name, i) => isMembers[i]);
+    async function findUserGroups(uid:string, groupNames:string[]) {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        const isMembers = await Groups.isMemberOfGroups(uid, groupNames);
+        return groupNames.filter((name, i:number) => isMembers[i]);
     }
 
-    const getUserInviteGroups = async function () {
-        let uid:string;
+    const getUserInviteGroups = async function (uid:string) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         let allGroups:Group[] = await Groups.getNonPrivilegeGroups('groups:createtime', 0, -1);
