@@ -4,7 +4,6 @@ import util = require('util');
 import path = require('path');
 import os = require('os');
 import nconf = require('nconf');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 import { Express } from 'express';
 import chalk = require('chalk');
 
@@ -17,10 +16,6 @@ import useragent = require('express-useragent');
 import favicon = require('serve-favicon');
 import detector = require('spider-detector');
 import helmet from 'helmet';
-
-import { Socket } from 'net';
-import https from 'https';
-import http from 'http';
 
 import Benchpress = require('benchpressjs');
 import db = require('./database');
@@ -39,8 +34,11 @@ import auth = require('./routes/authentication');
 import helpers = require('./helpers');
 
 import promisify from './promisify';
+import { Socket } from 'net';
+import https from 'https';
+import http from 'http';
 
- const express = require('express');
+const express = require('express');
 
 declare module 'express' {
     interface Application {
@@ -48,7 +46,7 @@ declare module 'express' {
     }
 }
 
-const app: Express & { renderAsync?: (tpl: string, data: object, callback: () => any) => Promise<string> } = express.default();
+const app: Express & { renderAsync?: (tpl: string, data: object, callback: () => any) => Promise<string> } = express();
 app.renderAsync = util.promisify(app.render.bind(app));
 let server: https.Server | http.Server;
 
@@ -76,7 +74,7 @@ server.on('error', (err) => {
 
 // see https://github.com/isaacs/server-destroy/blob/master/index.js
 const connections = {};
-server.on('connection', (conn) => {
+server.on('connection', (conn: Socket) => {
     const key = `${conn.remoteAddress}:${conn.remotePort}`;
     connections[key] = conn;
     conn.on('close', () => {
