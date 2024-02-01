@@ -4,6 +4,7 @@ import util = require('util');
 import path = require('path');
 import os = require('os');
 import nconf = require('nconf');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import { Express } from 'express';
 import chalk = require('chalk');
 
