@@ -40,7 +40,7 @@ module.exports = function (Topics) {
             if (parseInt(uid.toString(), 10) <= 0 || isNaN(tid) || isNaN(uid)) {
                 return null;
             }
-            return yield db.sortedSetScore(`tid:${tid}:bookmarks`, uid);
+            return (yield db.sortedSetScore(`tid:${tid}:bookmarks`, uid)) || null;
         });
     };
     Topics.getUserBookmarks = function (tids, uid) {

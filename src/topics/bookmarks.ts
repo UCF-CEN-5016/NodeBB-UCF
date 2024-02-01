@@ -3,36 +3,35 @@ import * as db from '../database';
 import * as user from '../user';
 
 interface Topics {
-  getPostCount(tid: number): Promise<number>;
-  getUserBookmark(tid: number, uid: number): Promise<number>;
-  getUserBookmarks(tids: number[], uid: number): Promise<(number)[]>;
-  setUserBookmark(tid: number, uid: number, index: number): Promise<void>;
-  getTopicBookmarks(tid: number): Promise<{ value: number; score: number }[]>;
-  updateTopicBookmarks(tid: number, pids: number[]): Promise<void>;
+    getPostCount(tid: number): Promise<number>;
+    getUserBookmark(tid: number, uid: number): Promise<number | null>;
+    getUserBookmarks(tids: number[], uid: number): Promise<(number | null)[]>;
+    setUserBookmark(tid: number, uid: number, index: number): Promise<void>;
+    getTopicBookmarks(tid: number): Promise<{ value: number; score: number }[]>;
+    updateTopicBookmarks(tid: number, pids: number[]): Promise<void>;
 }
 
 export = function (Topics: Topics) {
-    Topics.getUserBookmark = async function (tid: number, uid: number): Promise<number> {
+    Topics.getUserBookmark = async function (tid: number, uid: number): Promise<number | null> {
         if (parseInt(uid.toString(), 10) <= 0 || isNaN(tid) || isNaN(uid)) {
-        return null;
+            return null;
         }
-        return await db.sortedSetScore(`tid:${tid}:bookmarks`, uid);
+        return (await db.sortedSetScore(`tid:${tid}:bookmarks`, uid)) || null;
     };
 
-    Topics.getUserBookmarks = async function (tids: number[], uid: number): Promise<(number)[]> {
+    Topics.getUserBookmarks = async function (tids: number[], uid: number): Promise<(number | null)[]> {
         if (parseInt(uid.toString(), 10) <= 0 || tids.some(isNaN) || isNaN(uid)) {
-        return tids.map(() => null);
+            return tids.map(() => null);
         }
         return await db.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
     };
 
     Topics.setUserBookmark = async function (tid: number, uid: number, index: number): Promise<void> {
         if (isNaN(tid) || isNaN(uid) || isNaN(index)) {
-        throw new Error('Invalid input');
+            throw new Error('Invalid input');
         }
         await db.sortedSetAdd(`tid:${tid}:bookmarks`, index, uid);
     };
-
 
     Topics.getTopicBookmarks = async function (tid: number): Promise<{ value: number; score: number }[]> {
         return await db.getSortedSetRangeWithScores(`tid:${tid}:bookmarks`, 0, -1);
