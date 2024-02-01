@@ -15,7 +15,7 @@ const sleep = util.promisify(setTimeout);
 interface ProcessSortedSetOptions {
     progress?: { total?: number };
     batch?: number;
-    withScores?: unknown;
+    withScores?: boolean;
     doneIf?: (start: number, stop: number, ids: string[]) => boolean;
     alwaysStartAt?: number;
     interval?: number;
@@ -24,7 +24,7 @@ interface ProcessSortedSetOptions {
 export async function processSortedSet(
     setKey: string,
     process: (...args: unknown[]) => unknown,
-    options: ProcessSortedSetOptions = {},
+    options: ProcessSortedSetOptions,
 ): Promise<unknown> {
     options = options || {};
 
@@ -87,7 +87,7 @@ interface ProcessArrayOptions {
 export async function processArray(
     array: string[],
     process: (currentbatch: unknown) => unknown,
-    options: ProcessArrayOptions = {},
+    options: ProcessArrayOptions,
 ): Promise<unknown> {
     options = options || {};
 

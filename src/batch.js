@@ -36,7 +36,7 @@ const database_1 = __importDefault(require("./database"));
 const utils_1 = __importDefault(require("./utils"));
 const DEFAULT_BATCH_SIZE = 100;
 const sleep = util_1.default.promisify(setTimeout);
-function processSortedSet(setKey, process, options = {}) {
+function processSortedSet(setKey, process, options) {
     return __awaiter(this, void 0, void 0, function* () {
         options = options || {};
         if (typeof process !== 'function') {
@@ -82,7 +82,7 @@ function processSortedSet(setKey, process, options = {}) {
     });
 }
 exports.processSortedSet = processSortedSet;
-function processArray(array, process, options = {}) {
+function processArray(array, process, options) {
     return __awaiter(this, void 0, void 0, function* () {
         options = options || {};
         if (!Array.isArray(array) || !array.length) {
