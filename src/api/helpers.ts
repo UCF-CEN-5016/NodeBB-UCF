@@ -1,5 +1,3 @@
-'use strict';
-
 const url = require('url');
 const user = require('../user');
 const topics = require('../topics');
@@ -45,6 +43,21 @@ exports.buildReqObject = (req, payload) => {
     };
 };
 
+async function logTopicAction(action, req, tid, title) {
+    // Only log certain actions to system event log
+    const actionsToLog = ['delete', 'restore', 'purge'];
+    if (!actionsToLog.includes(action)) {
+        return;
+    }
+    await events.log({
+        type: `topic-${action}`,
+        uid: req.uid,
+        ip: req.ip,
+        tid: tid,
+        title: String(title),
+    });
+}
+
 exports.doTopicAction = async function (action, event, caller, { tids }) {
     if (!Array.isArray(tids)) {
         throw new Error('[[error:invalid-tid]]');
@@ -70,20 +83,7 @@ exports.doTopicAction = async function (action, event, caller, { tids }) {
     }));
 };
 
-async function logTopicAction(action, req, tid, title) {
-    // Only log certain actions to system event log
-    const actionsToLog = ['delete', 'restore', 'purge'];
-    if (!actionsToLog.includes(action)) {
-        return;
-    }
-    await events.log({
-        type: `topic-${action}`,
-        uid: req.uid,
-        ip: req.ip,
-        tid: tid,
-        title: String(title),
-    });
-}
+
 
 exports.postCommand = async function (caller, command, eventName, notification, data) {
     if (!caller.uid) {
