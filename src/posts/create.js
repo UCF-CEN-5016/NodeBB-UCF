@@ -1,8 +1,9 @@
 "use strict";
-// Comment: Below, I left 'Posts' as type 'any' to resolve the issue with Posts.uploads.sync call on
-// line 135. I tried creating a type for this so that Posts have a type Posts (which I was defining). However,
-// Posts.uploads is not defined in this file, so I used the error suppressing comment given. I have talked to
-// the professor about this issue, and he suggested leaving Posts as type 'any' and suppressing the error.
+// Comment: Below, I left 'Posts' as type 'any' to resolve the issue with Posts.uploads.sync on
+// line 139. I tried creating a type for this so that Posts have a type Posts (which I was defining).
+// However, Posts.uploads is not defined in this file, so I used the error suppressing comment given.
+// I have talked to the professor about this issue, and he suggested leaving Posts as type 'any' and
+// suppressing the error.
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
