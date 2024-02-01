@@ -15,7 +15,7 @@ const sleep = util.promisify(setTimeout);
 interface ProcessSortedSetOptions {
     progress?: { total?: number };
     batch?: number;
-    withScores?: boolean;
+    withScores?: unknown;
     doneIf?: (start: number, stop: number, ids: string[]) => boolean;
     alwaysStartAt?: number;
     interval?: number;
