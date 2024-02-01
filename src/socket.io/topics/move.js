@@ -31,88 +31,69 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const meta = __importStar(require("../../meta"));
+const async = __importStar(require("async"));
 const user = __importStar(require("../../user"));
 const topics = __importStar(require("../../topics"));
 const categories = __importStar(require("../../categories"));
 const privileges = __importStar(require("../../privileges"));
-const utils = __importStar(require("../../utils"));
+const socketHelpers = __importStar(require("../helpers"));
+const events = __importStar(require("../../events"));
 module.exports = function (SocketTopics) {
-    SocketTopics.isTagAllowed = function (socket, data) {
+    SocketTopics.move = function (socket, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!data || !utils.isNumber(data.cid) || !data.tag) {
+            if (!data || !Array.isArray(data.tids) || !data.cid) {
                 throw new Error('[[error:invalid-data]]');
             }
-            const systemTags = (meta.config.systemTags || '').split(',');
-            const [tagWhitelist, isPrivileged] = yield Promise.all([
-                categories.getTagWhitelist([data.cid]),
-                user.isPrivileged(socket.uid),
-            ]);
-            return isPrivileged ||
-                (!systemTags.includes(data.tag) &&
-                    (!tagWhitelist[0].length || tagWhitelist[0].includes(data.tag)));
-        });
-    };
-    SocketTopics.canRemoveTag = function (socket, data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!data || !data.tag) {
-                throw new Error('[[error:invalid-data]]');
-            }
-            const systemTags = (meta.config.systemTags || '').split(',');
-            const isPrivileged = yield user.isPrivileged(socket.uid);
-            return isPrivileged || !systemTags.includes(String(data.tag).trim());
-        });
-    };
-    SocketTopics.autocompleteTags = function (socket, data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (data.cid) {
-                const canRead = yield privileges.categories.can('topics:read', data.cid, socket.uid);
-                if (!canRead) {
-                    throw new Error('[[error:no-privileges]]');
-                }
-            }
-            data.cids = yield categories.getCidsByPrivilege('categories:cid', socket.uid, 'topics:read');
-            const result = yield topics.autocompleteTags(data);
-            return result.map((tag) => tag.value);
-        });
-    };
-    SocketTopics.searchTags = function (socket, data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const result = yield searchTags(socket.uid, topics.searchTags, data);
-            return result.map((tag) => tag.value);
-        });
-    };
-    SocketTopics.searchAndLoadTags = function (socket, data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield searchTags(socket.uid, topics.searchAndLoadTags, data);
-        });
-    };
-    function searchTags(uid, method, data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const allowed = yield privileges.global.can('search:tags', uid);
-            if (!allowed) {
+            const canMove = yield privileges.categories.isAdminOrMod(data.cid, socket.uid);
+            if (!canMove) {
                 throw new Error('[[error:no-privileges]]');
             }
-            if (data.cid) {
-                const canRead = yield privileges.categories.can('topics:read', data.cid, uid);
-                if (!canRead) {
+            const uids = yield user.getUidsFromSet('users:online', 0, -1);
+            yield async.eachLimit(data.tids, 10, (tid) => __awaiter(this, void 0, void 0, function* () {
+                const canMove = yield privileges.topics.isAdminOrMod(tid, socket.uid);
+                if (!canMove) {
                     throw new Error('[[error:no-privileges]]');
                 }
-            }
-            data.cids = yield categories.getCidsByPrivilege('categories:cid', uid, 'topics:read');
-            return yield method(data);
+                const topicData = yield topics.getTopicFields(tid, ['tid', 'cid', 'slug', 'deleted']);
+                data.uid = socket.uid;
+                yield topics.tools.move(tid, data);
+                const notifyUids = yield privileges.categories.filterUids('topics:read', topicData.cid, uids);
+                socketHelpers.emitToUids('event:topic_moved', topicData, notifyUids);
+                if (!topicData.deleted) {
+                    socketHelpers.sendNotificationToTopicOwner(tid, socket.uid, 'move', 'notifications:moved_your_topic');
+                }
+                yield events.log({
+                    type: 'topic-move',
+                    uid: socket.uid,
+                    ip: socket.ip,
+                    tid: tid,
+                    fromCid: topicData.cid,
+                    toCid: data.cid,
+                });
+            }));
         });
-    }
-    SocketTopics.loadMoreTags = function (socket, data) {
+    };
+    SocketTopics.moveAll = function (socket, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!data || !utils.isNumber(data.after)) {
+            if (!data || !data.cid || !data.currentCid) {
                 throw new Error('[[error:invalid-data]]');
             }
-            const start = parseInt(data.after, 10);
-            const stop = start + 99;
-            const cids = yield categories.getCidsByPrivilege('categories:cid', socket.uid, 'topics:read');
-            const tags = yield topics.getCategoryTagsData(cids, start, stop);
-            return { tags: tags.filter(Boolean), nextStart: stop + 1 };
+            const canMove = yield privileges.categories.canMoveAllTopics(data.currentCid, data.cid, socket.uid);
+            if (!canMove) {
+                throw new Error('[[error:no-privileges]]');
+            }
+            const tids = yield categories.getAllTopicIds(data.currentCid, 0, -1);
+            data.uid = socket.uid;
+            yield async.eachLimit(tids, 50, (tid) => __awaiter(this, void 0, void 0, function* () {
+                yield topics.tools.move(tid, data);
+            }));
+            yield events.log({
+                type: 'topic-move-all',
+                uid: socket.uid,
+                ip: socket.ip,
+                fromCid: data.currentCid,
+                toCid: data.cid,
+            });
         });
     };
 };

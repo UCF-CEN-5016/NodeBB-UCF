@@ -1,87 +1,77 @@
 'use strict';
 
-import * as meta from '../../meta';
+import * as async from 'async';
 import * as user from '../../user';
 import * as topics from '../../topics';
 import * as categories from '../../categories';
 import * as privileges from '../../privileges';
-import * as utils from '../../utils';
+import * as socketHelpers from '../helpers';
+import * as events from '../../events';
 
 export = function (SocketTopics: any): void {
-    SocketTopics.isTagAllowed = async function (socket: any, data: any): Promise<boolean> {
-        if (!data || !utils.isNumber(data.cid) || !data.tag) {
+    SocketTopics.move = async function (socket: any, data: any): Promise<void> {
+        if (!data || !Array.isArray(data.tids) || !data.cid) {
             throw new Error('[[error:invalid-data]]');
         }
 
-        const systemTags: string[] = (meta.config.systemTags || '').split(',');
-        const [tagWhitelist, isPrivileged]: [string[], boolean] = await Promise.all([
-            categories.getTagWhitelist([data.cid]),
-            user.isPrivileged(socket.uid),
-        ]);
-
-        return isPrivileged ||
-            (
-                !systemTags.includes(data.tag) &&
-                (!tagWhitelist[0].length || tagWhitelist[0].includes(data.tag))
-            );
-    };
-
-    SocketTopics.canRemoveTag = async function (socket: any, data: any): Promise<boolean> {
-        if (!data || !data.tag) {
-            throw new Error('[[error:invalid-data]]');
-        }
-
-        const systemTags: string[] = (meta.config.systemTags || '').split(',');
-        const isPrivileged: boolean = await user.isPrivileged(socket.uid);
-
-        return isPrivileged || !systemTags.includes(String(data.tag).trim());
-    };
-
-    SocketTopics.autocompleteTags = async function (socket: any, data: any): Promise<string[]> {
-        if (data.cid) {
-            const canRead: boolean = await privileges.categories.can('topics:read', data.cid, socket.uid);
-            if (!canRead) {
-                throw new Error('[[error:no-privileges]]');
-            }
-        }
-        data.cids = await categories.getCidsByPrivilege('categories:cid', socket.uid, 'topics:read');
-        const result: any[] = await topics.autocompleteTags(data);
-        return result.map((tag: any) => tag.value);
-    };
-
-    SocketTopics.searchTags = async function (socket: any, data: any): Promise<string[]> {
-        const result: any[] = await searchTags(socket.uid, topics.searchTags, data);
-        return result.map((tag: any) => tag.value);
-    };
-
-    SocketTopics.searchAndLoadTags = async function (socket: any, data: any): Promise<any[]> {
-        return await searchTags(socket.uid, topics.searchAndLoadTags, data);
-    };
-
-    async function searchTags(uid: number, method: Function, data: any): Promise<any[]> {
-        const allowed: boolean = await privileges.global.can('search:tags', uid);
-        if (!allowed) {
+        const canMove = await privileges.categories.isAdminOrMod(data.cid, socket.uid);
+        if (!canMove) {
             throw new Error('[[error:no-privileges]]');
         }
-        if (data.cid) {
-            const canRead: boolean = await privileges.categories.can('topics:read', data.cid, uid);
-            if (!canRead) {
+
+        const uids = await user.getUidsFromSet('users:online', 0, -1);
+
+        await async.eachLimit(data.tids, 10, async (tid: number) => {
+            const canMove = await privileges.topics.isAdminOrMod(tid, socket.uid);
+            if (!canMove) {
                 throw new Error('[[error:no-privileges]]');
             }
-        }
-        data.cids = await categories.getCidsByPrivilege('categories:cid', uid, 'topics:read');
-        return await method(data);
-    }
 
-    SocketTopics.loadMoreTags = async function (socket: any, data: any): Promise<{ tags: any[]; nextStart: number }> {
-        if (!data || !utils.isNumber(data.after)) {
+            const topicData = await topics.getTopicFields(tid, ['tid', 'cid', 'slug', 'deleted']);
+            data.uid = socket.uid;
+            await topics.tools.move(tid, data);
+
+            const notifyUids = await privileges.categories.filterUids('topics:read', topicData.cid, uids);
+            socketHelpers.emitToUids('event:topic_moved', topicData, notifyUids);
+
+            if (!topicData.deleted) {
+                socketHelpers.sendNotificationToTopicOwner(tid, socket.uid, 'move', 'notifications:moved_your_topic');
+            }
+
+            await events.log({
+                type: 'topic-move',
+                uid: socket.uid,
+                ip: socket.ip,
+                tid: tid,
+                fromCid: topicData.cid,
+                toCid: data.cid,
+            });
+        });
+    };
+
+    SocketTopics.moveAll = async function (socket: any, data: any): Promise<void> {
+        if (!data || !data.cid || !data.currentCid) {
             throw new Error('[[error:invalid-data]]');
         }
 
-        const start: number = parseInt(data.after, 10);
-        const stop: number = start + 99;
-        const cids: number[] = await categories.getCidsByPrivilege('categories:cid', socket.uid, 'topics:read');
-        const tags: any[] = await topics.getCategoryTagsData(cids, start, stop);
-        return { tags: tags.filter(Boolean), nextStart: stop + 1 };
+        const canMove = await privileges.categories.canMoveAllTopics(data.currentCid, data.cid, socket.uid);
+        if (!canMove) {
+            throw new Error('[[error:no-privileges]]');
+        }
+
+        const tids = await categories.getAllTopicIds(data.currentCid, 0, -1);
+        data.uid = socket.uid;
+
+        await async.eachLimit(tids, 50, async (tid: number) => {
+            await topics.tools.move(tid, data);
+        });
+
+        await events.log({
+            type: 'topic-move-all',
+            uid: socket.uid,
+            ip: socket.ip,
+            fromCid: data.currentCid,
+            toCid: data.cid,
+        });
     };
 };
