@@ -1,0 +1,45 @@
+
+NodeBB v2.8.1 Copyright (C) 2013-2024 NodeBB Inc.
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it under certain conditions.
+For the full license, please visit: http://www.gnu.org/copyleft/gpl.html
+
+Clustering enabled: Spinning up 1 process(es).
+
+2024-01-31T02:13:32.324Z [4567/7755] - [32minfo[39m: Initializing NodeBB v2.8.1 http://127.0.0.1:4567
+2024-01-31T02:13:33.198Z [4567/7755] - [32minfo[39m: [socket.io] Restricting access to origin: http://127.0.0.1:*
+(node:7755) [LRU_CACHE_UNBOUNDED] UnboundedCacheWarning: TTL caching without ttlAutopurge, max, or maxSize can result in unbounded memory consumption.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+2024-01-31T02:13:33.366Z [4567/7755] - [33mwarn[39m: [plugins/load] The following plugins may not be compatible with your version of NodeBB. This may cause unintended behaviour or crashing. In the event of an unresponsive NodeBB caused by this plugin, run `./nodebb reset -p PLUGINNAME` to disable it.
+  * nodebb-rewards-essentials
+
+2024-01-31T02:13:33.412Z [4567/7755] - [32minfo[39m: [api] Adding 0 route(s) to `api/v3/plugins`
+2024-01-31T02:13:33.417Z [4567/7755] - [32minfo[39m: [router] Routes added
+2024-01-31T02:13:33.419Z [4567/7755] - [32minfo[39m: 🎉 NodeBB Ready
+2024-01-31T02:13:33.419Z [4567/7755] - [32minfo[39m: 🤝 Enabling 'trust proxy'
+2024-01-31T02:13:33.421Z [4567/7755] - [32minfo[39m: 📡 NodeBB is now listening on: 0.0.0.0:4567
+2024-01-31T02:13:33.421Z [4567/7755] - [32minfo[39m: 🔗 Canonical URL: http://127.0.0.1:4567
+dummy logdummy log
+NodeBB v2.8.1 Copyright (C) 2013-2024 NodeBB Inc.
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it under certain conditions.
+For the full license, please visit: http://www.gnu.org/copyleft/gpl.html
+
+Clustering enabled: Spinning up 1 process(es).
+
+2024-02-01T18:41:44.568Z [4569/5427] - [32minfo[39m: Initializing NodeBB v2.8.1 http://127.0.0.1:4569
+2024-02-01T18:41:45.476Z [4569/5427] - [32minfo[39m: [socket.io] Restricting access to origin: http://127.0.0.1:*
+(node:5427) [LRU_CACHE_UNBOUNDED] UnboundedCacheWarning: TTL caching without ttlAutopurge, max, or maxSize can result in unbounded memory consumption.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+2024-02-01T18:41:45.671Z [4569/5427] - [33mwarn[39m: [plugins/load] The following plugins may not be compatible with your version of NodeBB. This may cause unintended behaviour or crashing. In the event of an unresponsive NodeBB caused by this plugin, run `./nodebb reset -p PLUGINNAME` to disable it.
+  * nodebb-rewards-essentials
+
+2024-02-01T18:41:45.719Z [4569/5427] - [32minfo[39m: [api] Adding 0 route(s) to `api/v3/plugins`
+2024-02-01T18:41:45.727Z [4569/5427] - [32minfo[39m: [router] Routes added
+2024-02-01T18:41:45.729Z [4569/5427] - [32minfo[39m: 🎉 NodeBB Ready
+2024-02-01T18:41:45.730Z [4569/5427] - [32minfo[39m: 🤝 Enabling 'trust proxy'
+2024-02-01T18:41:45.732Z [4569/5427] - [32minfo[39m: 📡 NodeBB is now listening on: 0.0.0.0:4569
+2024-02-01T18:41:45.732Z [4569/5427] - [32minfo[39m: 🔗 Canonical URL: http://127.0.0.1:4569
+dummy log

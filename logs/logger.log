@@ -1,0 +1,24 @@
+io: 1 on [
+  {
+    type: 2,
+    nsp: '/',
+    id: 14,
+    data: [ 'meta.rooms.enter', { enter: 'recent_topics' } ]
+  }
+]
+io: 1 on [
+  {
+    type: 2,
+    nsp: '/',
+    id: 14,
+    data: [ 'meta.rooms.enter', { enter: 'recent_topics' } ]
+  }
+]
+io: 1 on [
+  {
+    type: 2,
+    nsp: '/',
+    id: 14,
+    data: [ 'meta.rooms.enter', { enter: 'recent_topics' } ]
+  }
+]
