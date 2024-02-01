@@ -28,18 +28,14 @@ function get(req, res) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const [categoryData, userSettings, isPrivileged] = yield Promise.all([
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             helpers_1.default.getSelectedCategory(cid),
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             user_1.default.getSettings(req.uid),
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             user_1.default.isPrivileged(req.uid),
         ]);
         let page = 1;
-        if (typeof req.query.page === 'string' && !Number.isNaN(parseInt(req.query.page, 10))) {
+        if (typeof req.query.page === 'string' && req.query.page.length > 0) {
             page = parseInt(req.query.page, 10);
         }
         // The next line calls a function in a module that has not been updated to TS yet
@@ -58,8 +54,7 @@ function get(req, res) {
             filter: filter,
             query: req.query,
         });
-        const isDisplayedAsHome = !(req.originalUrl.startsWith(`${relative_path}/api/unread`) ||
-            req.originalUrl.startsWith(`${relative_path}/unread`));
+        const isDisplayedAsHome = !(req.originalUrl.startsWith(`${relative_path}/api/unread`) || req.originalUrl.startsWith(`${relative_path}/unread`));
         const baseUrl = isDisplayedAsHome ? '' : 'unread';
         if (isDisplayedAsHome) {
             // The next line calls a function in a module that has not been updated to TS yet
@@ -119,11 +114,10 @@ function get(req, res) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         data.filters = helpers_1.default.buildFilters(baseUrl, filter, req.query);
         // The next line calls a function in a module that has not been updated to TS yet
-        /* eslint-disable-next-line
-            @typescript-eslint/no-unsafe-assignment,
-            @typescript-eslint/no-unsafe-member-access,
-            @typescript-eslint/no-unsafe-call,
-            @typescript-eslint/no-unsafe-return */
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,
+                                    @typescript-eslint/no-unsafe-member-access,
+                                    @typescript-eslint/no-unsafe-call,
+                                    @typescript-eslint/no-unsafe-return */
         data.selectedFilter = data.filters.find(filter => filter && filter.selected);
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
