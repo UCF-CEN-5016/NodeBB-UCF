@@ -45,7 +45,8 @@ declare module 'express' {
     }
 }
 
-const app: express.Express & { renderAsync?: (tpl: string, data: object, callback: () => any) => Promise<string> } = express();
+const app: express.Express & { renderAsync?: (tpl: string, data: object, callback: () => void) => Promise<string> } =
+    express();
 app.renderAsync = util.promisify(app.render.bind(app));
 let server: https.Server | http.Server;
 
@@ -84,7 +85,7 @@ server.on('connection', (conn: net.Socket) => {
 exports.destroy = function (callback: () => void) {
     server.close(callback);
     for (const connection of Object.values(connections)) {
-        (connection as any).destroy();
+        (connection as net.Socket).destroy();
     }
 };
 
@@ -289,7 +290,9 @@ async function listen() {
         winston.info('Using ports 80 and 443 is not recommend; use a proxy instead. See README.md');
     }
 
-    const bind_address = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ? '0.0.0.0' : nconf.get('bind_address'));
+    const bind_address = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ?
+        '0.0.0.0' :
+        nconf.get('bind_address'));
     const args = isSocket ? [socketPath] : [port, bind_address];
     let oldUmask: number;
 

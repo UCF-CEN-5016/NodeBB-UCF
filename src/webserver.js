@@ -241,7 +241,9 @@ function listen() {
         if ((port === 80 || port === 443) && process.env.NODE_ENV !== 'development') {
             winston.info('Using ports 80 and 443 is not recommend; use a proxy instead. See README.md');
         }
-        const bind_address = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ? '0.0.0.0' : nconf.get('bind_address'));
+        const bind_address = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ?
+            '0.0.0.0' :
+            nconf.get('bind_address'));
         const args = isSocket ? [socketPath] : [port, bind_address];
         let oldUmask;
         if (isSocket) {
