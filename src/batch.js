@@ -29,6 +29,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.processArray = exports.processSortedSet = void 0;
+/* Commented out and revmoved done calls within src/test/batch.ts directory for a fix */
+/* Changed await upgrade.run() to upgrade.run() within src/test/upgrade.js directory for a fix */
 const util_1 = __importDefault(require("util"));
 const database_1 = __importDefault(require("./database"));
 const utils_1 = __importDefault(require("./utils"));
@@ -44,7 +46,7 @@ function processSortedSet(setKey, process, options = {}) {
         if (options.progress) {
             // db is not within this file, so we need to disable the eslint rule
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            options.progress.total = (yield database_1.default.sortedSetCard(setKey)); // As number fix?
+            options.progress.total = (yield database_1.default.sortedSetCard(setKey));
         }
         options.batch = options.batch || DEFAULT_BATCH_SIZE;
         // use the fast path if possible
@@ -53,7 +55,7 @@ function processSortedSet(setKey, process, options = {}) {
         if (database_1.default.processSortedSet && typeof options.doneIf !== 'function' && !utils_1.default.isNumber(options.alwaysStartAt)) {
             // db is not within this file, so we need to disable the eslint rule
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            return yield database_1.default.processSortedSet(setKey, process, options); // As Promise<void> fix?
+            return yield database_1.default.processSortedSet(setKey, process, options);
         }
         // custom done condition
         options.doneIf = typeof options.doneIf === 'function' ? options.doneIf : (() => false);

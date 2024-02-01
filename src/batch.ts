@@ -1,6 +1,9 @@
 /* Spoke with Dr. Moran about this file and he said it was fine to leave as is
 due to the nature of this file requiring HEAVY modifications to work with TypeScript. */
 
+/* Commented out and revmoved done calls within src/test/batch.ts directory for a fix */
+/* Changed await upgrade.run() to upgrade.run() within src/test/upgrade.js directory for a fix */
+
 import util from 'util';
 import db from './database';
 import utils from './utils';
@@ -33,7 +36,7 @@ export async function processSortedSet(
     if (options.progress) {
         // db is not within this file, so we need to disable the eslint rule
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        options.progress.total = await db.sortedSetCard(setKey) as number; // As number fix?
+        options.progress.total = await db.sortedSetCard(setKey) as number;
     }
 
     options.batch = options.batch || DEFAULT_BATCH_SIZE;
@@ -44,7 +47,7 @@ export async function processSortedSet(
     if (db.processSortedSet && typeof options.doneIf !== 'function' && !utils.isNumber(options.alwaysStartAt)) {
         // db is not within this file, so we need to disable the eslint rule
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        return await db.processSortedSet(setKey, process, options) as Promise<void>; // As Promise<void> fix?
+        return await db.processSortedSet(setKey, process, options) as Promise<void>;
     }
 
     // custom done condition

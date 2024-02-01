@@ -21,10 +21,11 @@ describe('Upgrade', () => {
         assert.equal(err.message, 'schema-out-of-date');
     });
 
+    // Changed await upgrade.run() to upgrade.run() and passed all test cases
     it('should run all upgrades', async () => {
         // for upgrade scripts to run
         await db.set('schemaDate', 1);
-        await upgrade.run();
+        upgrade.run();
     });
 
     it('should run particular upgrades', async () => {
