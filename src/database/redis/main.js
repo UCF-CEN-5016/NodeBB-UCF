@@ -1,35 +1,39 @@
-'use strict';
-
-module.exports = function (module) {
-    const helpers = require('./helpers');
-
-    module.flushdb = async function () {
-        await module.client.send_command('flushdb', []);
-    };
-
-    module.emptydb = async function () {
-        await module.flushdb();
+"use strict";
+// 'use strict';
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+module.exports = (module) => {
+    module.flushdb = () => __awaiter(void 0, void 0, void 0, function* () {
+        yield module.client.flushall();
+    });
+    module.emptydb = () => __awaiter(void 0, void 0, void 0, function* () {
+        yield module.flushdb();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         module.objectCache.reset();
-    };
-
-    module.exists = async function (key) {
+    });
+    module.exists = (key) => __awaiter(void 0, void 0, void 0, function* () {
         if (Array.isArray(key)) {
-            const batch = module.client.batch();
-            key.forEach(key => batch.exists(key));
-            const data = await helpers.execBatch(batch);
+            const data = yield Promise.all(key.map(k => module.client.exists(k)));
             return data.map(exists => exists === 1);
         }
-        const exists = await module.client.exists(key);
+        const exists = yield module.client.exists(key);
         return exists === 1;
-    };
-
-    module.scan = async function (params) {
+    });
+    module.scan = (params) => __awaiter(void 0, void 0, void 0, function* () {
         let cursor = '0';
         let returnData = [];
         const seen = {};
         do {
             /* eslint-disable no-await-in-loop */
-            const res = await module.client.scan(cursor, 'MATCH', params.match, 'COUNT', 10000);
+            const res = yield module.client.scan(cursor, 'MATCH', params.match, 'COUNT', 10000);
             cursor = res[0];
             const values = res[1].filter((value) => {
                 const isSeen = !!seen[value];
@@ -41,71 +45,54 @@ module.exports = function (module) {
             returnData = returnData.concat(values);
         } while (cursor !== '0');
         return returnData;
-    };
-
-    module.delete = async function (key) {
-        await module.client.del(key);
+    });
+    module.delete = (key) => __awaiter(void 0, void 0, void 0, function* () {
+        yield module.client.del(key);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         module.objectCache.del(key);
-    };
-
-    module.deleteAll = async function (keys) {
+    });
+    module.deleteAll = (keys) => __awaiter(void 0, void 0, void 0, function* () {
         if (!Array.isArray(keys) || !keys.length) {
             return;
         }
-        await module.client.del(keys);
+        yield module.client.del(keys);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         module.objectCache.del(keys);
-    };
-
-    module.get = async function (key) {
-        return await module.client.get(key);
-    };
-
-    module.set = async function (key, value) {
-        await module.client.set(key, value);
-    };
-
-    module.increment = async function (key) {
-        return await module.client.incr(key);
-    };
-
-    module.rename = async function (oldKey, newKey) {
+    });
+    module.get = (key) => __awaiter(void 0, void 0, void 0, function* () { return yield module.client.get(key); });
+    module.set = (key, value) => __awaiter(void 0, void 0, void 0, function* () {
+        yield module.client.set(key, value);
+    });
+    module.increment = (key) => __awaiter(void 0, void 0, void 0, function* () { return yield module.client.incr(key); });
+    module.rename = (oldKey, newKey) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            await module.client.rename(oldKey, newKey);
-        } catch (err) {
+            yield module.client.rename(oldKey, newKey);
+        }
+        catch (err) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             if (err && err.message !== 'ERR no such key') {
                 throw err;
             }
         }
-
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         module.objectCache.del([oldKey, newKey]);
-    };
-
-    module.type = async function (key) {
-        const type = await module.client.type(key);
+    });
+    module.type = (key) => __awaiter(void 0, void 0, void 0, function* () {
+        const type = yield module.client.type(key);
         return type !== 'none' ? type : null;
-    };
-
-    module.expire = async function (key, seconds) {
-        await module.client.expire(key, seconds);
-    };
-
-    module.expireAt = async function (key, timestamp) {
-        await module.client.expireat(key, timestamp);
-    };
-
-    module.pexpire = async function (key, ms) {
-        await module.client.pexpire(key, ms);
-    };
-
-    module.pexpireAt = async function (key, timestamp) {
-        await module.client.pexpireat(key, timestamp);
-    };
-
-    module.ttl = async function (key) {
-        return await module.client.ttl(key);
-    };
-
-    module.pttl = async function (key) {
-        return await module.client.pttl(key);
-    };
+    });
+    module.expire = (key, seconds) => __awaiter(void 0, void 0, void 0, function* () {
+        yield module.client.expire(key, seconds);
+    });
+    module.expireAt = (key, timestamp) => __awaiter(void 0, void 0, void 0, function* () {
+        yield module.client.expireat(key, timestamp);
+    });
+    module.pexpire = (key, ms) => __awaiter(void 0, void 0, void 0, function* () {
+        yield module.client.pexpire(key, ms);
+    });
+    module.pexpireAt = (key, timestamp) => __awaiter(void 0, void 0, void 0, function* () {
+        yield module.client.pexpireat(key, timestamp);
+    });
+    module.ttl = (key) => __awaiter(void 0, void 0, void 0, function* () { return yield module.client.ttl(key); });
+    module.pttl = (key) => __awaiter(void 0, void 0, void 0, function* () { return yield module.client.pttl(key); });
 };
