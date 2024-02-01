@@ -1,3 +1,8 @@
+// Comment: Below, I left 'Posts' as type 'any' to resolve the issue with Posts.uploads.sync call on
+// line 135. I tried creating a type for this so that Posts have a type Posts (which I was defining). However,
+// Posts.uploads is not defined in this file, so I used the error suppressing comment given. I have talked to
+// the professor about this issue, and he suggested leaving Posts as type 'any' and suppressing the error.
+
 import _ = require('lodash');
 
 import meta = require('../meta');
@@ -8,14 +13,6 @@ import topics = require('../topics');
 import categories = require('../categories');
 import groups = require('../groups');
 import utils = require('../utils');
-
-
-// type Posts = {
-//     // create: (data: Record<string, string[] | string | number | symbol>) => Promise<PostData>;
-//     create: (data: Data) => Promise<PostData>;
-//     uploads: (pid: number) => Promise<void>;
-//     // addReplyTo: (postData: PostData[], timestamp: number) => Promise<{}>;
-// }
 
 interface Data {
     pid?: number;
@@ -51,7 +48,6 @@ interface Topics {
     pinned?: boolean | undefined;
 }
 
-// module.exports = function (Posts: Posts) {
 module.exports = function (Posts) {
     async function addReplyTo(postData: PostData, timestamp: number) {
         if (!postData.toPid) {
@@ -75,10 +71,6 @@ module.exports = function (Posts) {
         const content = data.content.toString();
         const timestamp = data.timestamp || Date.now();
         const isMain = data.isMain || false;
-        // const { toPid } = data;
-        // const { ip } = data;
-        // const { handle } = data;
-        // const { cid } = data;
 
         if (!uid && parseInt(uid, 10) !== 0) {
             throw new Error('[[error:invalid-uid]]');
@@ -98,9 +90,6 @@ module.exports = function (Posts) {
             content: content,
             timestamp: timestamp,
         };
-
-        // console.log(data.toPid);
-
 
         if (data.toPid) {
             postData.toPid = data.toPid;
@@ -144,8 +133,6 @@ module.exports = function (Posts) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             groups.onNewPostMade(postData),
             addReplyTo(postData, timestamp),
-            // Posts.uploads.sync(postData.pid),
-            // await Posts.uploads(postData.pid),
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             Posts.uploads.sync(postData.pid),
