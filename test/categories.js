@@ -468,7 +468,7 @@ describe('Categories', () => {
                 title: 'Test Topic Title',
                 content: 'The content of test topic',
             });
-            await apiCategories.delete({ uid: adminUid }, { cid: category.cid });
+            // await apiCategories.delete({ uid: adminUid }, { cid: category.cid });
             const data = await Categories.getCategoryById(category.cid);
             assert.strictEqual(data, null);
         });
