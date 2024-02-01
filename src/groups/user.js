@@ -1,5 +1,4 @@
-"use strict";
-// 'use strict';
+'use strict';
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -10,15 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-//supressed errors include modules that have been imported from another file adding the module.export 
-//in allows this to work but still "unsafe...any type" error. Typing async functions are causing issues.
+// supressed errors include modules that have been imported from another file adding the module.export
+// in allows this to work but still "unsafe...any type" error. Typing async functions are causing issues.
 const db = require("../database");
 const user = require("../user");
-function Groups() {
-    const getUsersFromSet = function () {
+module.exports = function (Groups) {
+    const getUsersFromSet = function (set, fields) {
         return __awaiter(this, void 0, void 0, function* () {
-            let set;
-            let fields;
             const uids = yield db.getSetMembers(set);
             if (fields) {
                 return yield user.getUsersFields(uids, fields);
@@ -26,47 +23,35 @@ function Groups() {
             return yield user.getUsersData(uids);
         });
     };
-    const getUserGroups = function () {
+    const getUserGroups = function (uids) {
         return __awaiter(this, void 0, void 0, function* () {
-            let uids;
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             return yield Groups.getUserGroupsFromSet('groups:visible:createtime', uids);
         });
     };
-    // The next line calls a function in a module that has not been updated to TS yet
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    const getUserGroupsFromSet = function () {
+    const getUserGroupsFromSet = function (set, uids) {
         return __awaiter(this, void 0, void 0, function* () {
-            let set;
-            let uids;
             const memberOf = yield Groups.getUserGroupMembership(set, uids);
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             return yield Promise.all(memberOf.map(memberOf => Groups.getGroupsData(memberOf)));
         });
     };
-    const getUserGroupMembership = function () {
+    const getUserGroupMembership = function (set, uids) {
         return __awaiter(this, void 0, void 0, function* () {
-            let set;
-            let uids;
             const groupNames = yield db.getSortedSetRevRange(set, 0, -1);
-            return yield Promise.all(uids.map(uid => findUserGroups()));
+            return yield Promise.all(uids.map(uid => findUserGroups(uid, groupNames)));
         });
     };
-    function findUserGroups() {
+    function findUserGroups(uid, groupNames) {
         return __awaiter(this, void 0, void 0, function* () {
-            let uid;
-            let groupNames;
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             const isMembers = yield Groups.isMemberOfGroups(uid, groupNames);
             return groupNames.filter((name, i) => isMembers[i]);
         });
     }
-    const getUserInviteGroups = function () {
+    const getUserInviteGroups = function (uid) {
         return __awaiter(this, void 0, void 0, function* () {
-            let uid;
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             let allGroups = yield Groups.getNonPrivilegeGroups('groups:createtime', 0, -1);
@@ -103,6 +88,4 @@ function Groups() {
                 .concat(publicGroups);
         });
     };
-}
-exports.default = Groups;
-;
+};
