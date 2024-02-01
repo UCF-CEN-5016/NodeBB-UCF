@@ -51,6 +51,7 @@ function handleURIErrors(err, req, res, next) {
                     });
                 }
                 else {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                     yield middleware_1.default.buildHeaderAsync(req, res);
                     res.status(400).render('400', { error: validator_1.default.escape(String(err.message)) });
                 }
@@ -62,7 +63,6 @@ function handleURIErrors(err, req, res, next) {
     });
 }
 exports.handleURIErrors = handleURIErrors;
-;
 // this needs to have four arguments or express treats it as `(req, res, next)`
 // don't remove `next`!
 exports.handleErrors = function handleErrors(err, req, res, next) {

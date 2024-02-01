@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-import-module-exports
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 // eslint-disable-next-line import/no-import-module-exports
 import nconf from 'nconf';
 // eslint-disable-next-line import/no-import-module-exports
@@ -25,7 +25,7 @@ interface CustomError extends Error {
     code: number
 }
 
-export async function handleURIErrors(err: CustomError, req: Request, res: Response, next: any) {
+export async function handleURIErrors(err: CustomError, req: Request, res: Response, next: NextFunction) {
     // Handle cases where malformed URIs are passed in
     if (err instanceof URIError) {
         const cleanPath: string = req.path.replace(new RegExp(`^${relative_path}`), '');
@@ -43,6 +43,7 @@ export async function handleURIErrors(err: CustomError, req: Request, res: Respo
                     error: '[[global:400.title]]',
                 });
             } else {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 await middleware.buildHeaderAsync(req, res);
                 res.status(400).render('400', { error: validator.escape(String(err.message)) });
             }
@@ -50,11 +51,11 @@ export async function handleURIErrors(err: CustomError, req: Request, res: Respo
     } else {
         next(err);
     }
-};
+}
 
 // this needs to have four arguments or express treats it as `(req, res, next)`
 // don't remove `next`!
-exports.handleErrors = async function handleErrors(err: CustomError, req: Request, res: Response, next: any) { // eslint-disable-line no-unused-vars
+exports.handleErrors = async function handleErrors(err: CustomError, req: Request, res: Response, next: NextFunction) { // eslint-disable-line no-unused-vars
     const cases = {
         EBADCSRFTOKEN: function () {
             winston.error(`${req.method} ${req.originalUrl}\n${err.message}`);
