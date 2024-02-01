@@ -13,20 +13,20 @@ const DEFAULT_BATCH_SIZE = 100;
 const sleep = util.promisify(setTimeout);
 
 interface ProcessSortedSetOptions {
-    progress?: { total?: number };
-    batch?: number;
-    withScores?: boolean;
-    doneIf?: (start: number, stop: number, ids: string[]) => boolean;
-    alwaysStartAt?: number;
-    interval?: number;
+    progress: { total: number };
+    batch: number;
+    withScores: boolean;
+    doneIf: (start: number, stop: number, ids: string[]) => boolean;
+    alwaysStartAt: number;
+    interval: number;
 }
 
 export async function processSortedSet(
     setKey: string,
-    process,
-    options: ProcessSortedSetOptions = {},
+    process: (...args: unknown[]) => unknown,
+    options: ProcessSortedSetOptions,
 ): Promise<unknown> {
-    options = options || {};
+    // options = options || {};
 
     if (typeof process !== 'function') {
         throw new Error('[[error:process-not-a-function]]');
@@ -56,9 +56,7 @@ export async function processSortedSet(
     let start = 0;
     let stop = options.batch - 1;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (process.constructor && process.constructor.name !== 'AsyncFunction') {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
         process = util.promisify(process);
     }
 
@@ -70,7 +68,6 @@ export async function processSortedSet(
         if (!ids.length || options.doneIf(start, stop, ids)) {
             return;
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await process(ids);
 
         start += utils.isNumber(options.alwaysStartAt) ? options.alwaysStartAt : options.batch;
@@ -89,7 +86,7 @@ interface ProcessArrayOptions {
 
 export async function processArray(
     array: string[],
-    process,
+    process: (currentbatch: unknown) => unknown,
     options: ProcessArrayOptions = {},
 ): Promise<unknown> {
     options = options || {};
@@ -104,9 +101,7 @@ export async function processArray(
     const batch: number = options.batch || DEFAULT_BATCH_SIZE;
     let start = 0;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (process.constructor && process.constructor.name !== 'AsyncFunction') {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
         process = util.promisify(process);
     }
 
@@ -117,7 +112,6 @@ export async function processArray(
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await process(currentBatch);
 
         start += batch;
