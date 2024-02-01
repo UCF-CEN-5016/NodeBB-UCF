@@ -220,31 +220,28 @@ describe('Categories', () => {
             await Topics.delete(data.topicData.tid, adminUid);
         });
 
-        it('should get recent replies in category', (done) => {
+        it('should get recent replies in category', () => {
             socketCategories.getRecentReplies({ uid: posterUid }, categoryObj.cid, (err, data) => {
                 assert.ifError(err);
                 assert(Array.isArray(data));
-                done();
             });
         });
 
-        it('should get categories', (done) => {
+        it('should get categories', () => {
             socketCategories.get({ uid: posterUid }, {}, (err, data) => {
                 assert.ifError(err);
                 assert(Array.isArray(data));
-                done();
             });
         });
 
-        it('should get watched categories', (done) => {
+        it('should get watched categories', () => {
             socketCategories.getWatchedCategories({ uid: posterUid }, {}, (err, data) => {
                 assert.ifError(err);
                 assert(Array.isArray(data));
-                done();
             });
         });
 
-        it('should load more topics', (done) => {
+        it('should load more topics', () => {
             socketCategories.loadMore({ uid: posterUid }, {
                 cid: categoryObj.cid,
                 after: 0,
@@ -258,7 +255,6 @@ describe('Categories', () => {
                 assert.equal(data.topics[0].user.username, 'poster');
                 assert.equal(data.topics[0].tags[0].value, 'nodebb');
                 assert.equal(data.topics[0].category.cid, categoryObj.cid);
-                done();
             });
         });
 
@@ -274,31 +270,28 @@ describe('Categories', () => {
             );
         });
 
-        it('should load topic count', (done) => {
+        it('should load topic count', () => {
             socketCategories.getTopicCount({ uid: posterUid }, categoryObj.cid, (err, topicCount) => {
                 assert.ifError(err);
                 assert.strictEqual(topicCount, 3);
-                done();
             });
         });
 
-        it('should load category by privilege', (done) => {
+        it('should load category by privilege', () => {
             socketCategories.getCategoriesByPrivilege({ uid: posterUid }, 'find', (err, data) => {
                 assert.ifError(err);
                 assert(Array.isArray(data));
-                done();
             });
         });
 
-        it('should get move categories', (done) => {
+        it('should get move categories', () => {
             socketCategories.getMoveCategories({ uid: posterUid }, {}, (err, data) => {
                 assert.ifError(err);
                 assert(Array.isArray(data));
-                done();
             });
         });
 
-        it('should ignore category', (done) => {
+        it('should ignore category', () => {
             socketCategories.ignore({ uid: posterUid }, { cid: categoryObj.cid }, (err) => {
                 assert.ifError(err);
                 Categories.isIgnored([categoryObj.cid], posterUid, (err, isIgnored) => {
@@ -307,35 +300,31 @@ describe('Categories', () => {
                     Categories.getIgnorers(categoryObj.cid, 0, -1, (err, ignorers) => {
                         assert.ifError(err);
                         assert.deepEqual(ignorers, [posterUid]);
-                        done();
                     });
                 });
             });
         });
 
-        it('should watch category', (done) => {
+        it('should watch category', () => {
             socketCategories.watch({ uid: posterUid }, { cid: categoryObj.cid }, (err) => {
                 assert.ifError(err);
                 Categories.isIgnored([categoryObj.cid], posterUid, (err, isIgnored) => {
                     assert.ifError(err);
                     assert.equal(isIgnored[0], false);
-                    done();
                 });
             });
         });
 
-        it('should error if watch state does not exist', (done) => {
+        it('should error if watch state does not exist', () => {
             socketCategories.setWatchState({ uid: posterUid }, { cid: categoryObj.cid, state: 'invalid-state' }, (err) => {
                 assert.equal(err.message, '[[error:invalid-watch-state]]');
-                done();
             });
         });
 
-        it('should check if user is moderator', (done) => {
+        it('should check if user is moderator', () => {
             socketCategories.isModerator({ uid: posterUid }, {}, (err, isModerator) => {
                 assert.ifError(err);
                 assert(!isModerator);
-                done();
             });
         });
 
@@ -473,11 +462,10 @@ describe('Categories', () => {
             assert.strictEqual(data, null);
         });
 
-        it('should get all category names', (done) => {
+        it('should get all category names', () => {
             socketCategories.getNames({ uid: adminUid }, {}, (err, data) => {
                 assert.ifError(err);
                 assert(Array.isArray(data));
-                done();
             });
         });
 
@@ -520,7 +508,7 @@ describe('Categories', () => {
             assert(canDelete);
         });
 
-        it('should create category with settings from', (done) => {
+        it('should create category with settings from', () => {
             let child1Cid;
             let parentCid;
             async.waterfall([
@@ -536,10 +524,10 @@ describe('Categories', () => {
                     assert.equal(category.description, 'copy me');
                     next();
                 },
-            ], done);
+            ]);
         });
 
-        it('should copy settings from', (done) => {
+        it('should copy settings from', () => {
             let child1Cid;
             let parentCid;
             async.waterfall([
@@ -565,7 +553,7 @@ describe('Categories', () => {
                     assert.equal(description, 'copy me');
                     next();
                 },
-            ], done);
+            ]);
         });
 
         it('should copy privileges from another category', async () => {
