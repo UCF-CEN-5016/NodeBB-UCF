@@ -47,19 +47,24 @@ declare module 'express' {
 
 const app: express.Express & { renderAsync?: (tpl: string, data: object, callback: () => void) => Promise<string> } =
     express();
+// eslint-disable-next-line
 app.renderAsync = util.promisify(app.render.bind(app));
 let server: https.Server | http.Server;
 
 if (nconf.get('ssl')) {
     server = https.createServer({
+        // eslint-disable-next-line
         key: fs.readFileSync(nconf.get('ssl').key),
+        // eslint-disable-next-line
         cert: fs.readFileSync(nconf.get('ssl').cert),
     }, app);
 } else {
     server = http.createServer(app);
 }
 
+// eslint-disable-next-line
 module.exports.server = server;
+// eslint-disable-next-line
 module.exports.app = app;
 
 server.on('error', (err) => {
@@ -81,31 +86,6 @@ server.on('connection', (conn: net.Socket) => {
         delete connections[key];
     });
 });
-
-exports.destroy = function (callback: () => void) {
-    server.close(callback);
-    for (const connection of Object.values(connections)) {
-        (connection as net.Socket).destroy();
-    }
-};
-
-exports.listen = async function () {
-    emailer.registerApp(app);
-    setupExpressApp(app);
-    helpers.register();
-    logger.init(app);
-    await initializeNodeBB();
-    winston.info('🎉 NodeBB Ready');
-
-    require('./socket.io').server.emit('event:nodebb.ready', {
-        'cache-buster': meta.config['cache-buster'],
-        hostname: os.hostname(),
-    });
-
-    plugins.hooks.fire('action:nodebb.ready');
-
-    await listen();
-};
 
 async function initializeNodeBB() {
     const middleware = require('./middleware');
@@ -197,6 +177,33 @@ function setupExpressApp(app) {
     toobusy.maxLag(meta.config.eventLoopLagThreshold);
     toobusy.interval(meta.config.eventLoopInterval);
 }
+
+// eslint-disable-next-line
+exports.destroy = function (callback: () => void) {
+    server.close(callback);
+    for (const connection of Object.values(connections)) {
+        (connection as net.Socket).destroy();
+    }
+};
+
+// eslint-disable-next-line
+exports.listen = async function () {
+    emailer.registerApp(app);
+    setupExpressApp(app);
+    helpers.register();
+    logger.init(app);
+    await initializeNodeBB();
+    winston.info('🎉 NodeBB Ready');
+
+    require('./socket.io').server.emit('event:nodebb.ready', {
+        'cache-buster': meta.config['cache-buster'],
+        hostname: os.hostname(),
+    });
+
+    plugins.hooks.fire('action:nodebb.ready');
+
+    await listen();
+};
 
 interface HelmetOptions {
     contentSecurityPolicy: boolean;

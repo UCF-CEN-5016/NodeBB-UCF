@@ -44,6 +44,8 @@ const auth = require("./routes/authentication");
 const helpers = require("./helpers");
 const promisify = require("./promisify");
 const app = express();
+// The next line calls a function in a module that has not been updated to TS yet
+// eslint-disable-next-line
 app.renderAsync = util.promisify(app.render.bind(app));
 let server;
 if (nconf.get('ssl')) {
@@ -75,7 +77,7 @@ server.on('connection', (conn) => {
         delete connections[key];
     });
 });
-exports.destroy = function (callback) {
+module.exports.destroy = function (callback) {
     server.close(callback);
     for (const connection of Object.values(connections)) {
         connection.destroy();
