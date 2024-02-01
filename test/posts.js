@@ -718,21 +718,19 @@ describe('Post\'s', () => {
     });
 
     describe('getPostSummaryByPids', () => {
-        it('should return empty array for empty pids', (done) => {
+        it('should return empty array for empty pids', () => {
             posts.getPostSummaryByPids([], 0, {}, (err, data) => {
                 assert.ifError(err);
                 assert.equal(data.length, 0);
-                done();
             });
         });
 
-        it('should get post summaries', (done) => {
+        it('should get post summaries', () => {
             posts.getPostSummaryByPids([postData.pid], 0, {}, (err, data) => {
                 assert.ifError(err);
                 assert(data[0].user);
                 assert(data[0].topic);
                 assert(data[0].category);
-                done();
             });
         });
     });
