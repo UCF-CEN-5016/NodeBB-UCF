@@ -23,8 +23,8 @@ interface ProcessSortedSetOptions {
 
 export async function processSortedSet(
     setKey: string,
-    process: (...args: unknown[]) => unknown,
-    options: ProcessSortedSetOptions,
+    process,
+    options: ProcessSortedSetOptions = {},
 ): Promise<unknown> {
     options = options || {};
 
@@ -56,7 +56,9 @@ export async function processSortedSet(
     let start = 0;
     let stop = options.batch - 1;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (process.constructor && process.constructor.name !== 'AsyncFunction') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
         process = util.promisify(process);
     }
 
@@ -68,6 +70,7 @@ export async function processSortedSet(
         if (!ids.length || options.doneIf(start, stop, ids)) {
             return;
         }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await process(ids);
 
         start += utils.isNumber(options.alwaysStartAt) ? options.alwaysStartAt : options.batch;
@@ -86,8 +89,8 @@ interface ProcessArrayOptions {
 
 export async function processArray(
     array: string[],
-    process: (currentbatch: unknown) => unknown,
-    options: ProcessArrayOptions,
+    process,
+    options: ProcessArrayOptions = {},
 ): Promise<unknown> {
     options = options || {};
 
@@ -101,7 +104,9 @@ export async function processArray(
     const batch: number = options.batch || DEFAULT_BATCH_SIZE;
     let start = 0;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (process.constructor && process.constructor.name !== 'AsyncFunction') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
         process = util.promisify(process);
     }
 
@@ -112,6 +117,7 @@ export async function processArray(
             return;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await process(currentBatch);
 
         start += batch;

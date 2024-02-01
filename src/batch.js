@@ -36,7 +36,9 @@ const database_1 = __importDefault(require("./database"));
 const utils_1 = __importDefault(require("./utils"));
 const DEFAULT_BATCH_SIZE = 100;
 const sleep = util_1.default.promisify(setTimeout);
-function processSortedSet(setKey, process, options) {
+function processSortedSet(setKey, 
+// process: (...args: unknown[]) => unknown,
+process, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
         options = options || {};
         if (typeof process !== 'function') {
@@ -61,7 +63,9 @@ function processSortedSet(setKey, process, options) {
         options.doneIf = typeof options.doneIf === 'function' ? options.doneIf : (() => false);
         let start = 0;
         let stop = options.batch - 1;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (process.constructor && process.constructor.name !== 'AsyncFunction') {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
             process = util_1.default.promisify(process);
         }
         while (true) {
@@ -72,6 +76,7 @@ function processSortedSet(setKey, process, options) {
             if (!ids.length || options.doneIf(start, stop, ids)) {
                 return;
             }
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             yield process(ids);
             start += utils_1.default.isNumber(options.alwaysStartAt) ? options.alwaysStartAt : options.batch;
             stop = start + options.batch - 1;
@@ -82,7 +87,9 @@ function processSortedSet(setKey, process, options) {
     });
 }
 exports.processSortedSet = processSortedSet;
-function processArray(array, process, options) {
+function processArray(array, 
+// process: (currentbatch: unknown) => unknown,
+process, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
         options = options || {};
         if (!Array.isArray(array) || !array.length) {
@@ -93,7 +100,9 @@ function processArray(array, process, options) {
         }
         const batch = options.batch || DEFAULT_BATCH_SIZE;
         let start = 0;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (process.constructor && process.constructor.name !== 'AsyncFunction') {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
             process = util_1.default.promisify(process);
         }
         while (true) {
@@ -101,6 +110,7 @@ function processArray(array, process, options) {
             if (!currentBatch.length) {
                 return;
             }
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             yield process(currentBatch);
             start += batch;
             if (options.interval) {
