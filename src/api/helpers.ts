@@ -1,14 +1,15 @@
-const url = require('url');
-const user = require('../user');
-const topics = require('../topics');
-const posts = require('../posts');
-const privileges = require('../privileges');
-const plugins = require('../plugins');
-const socketHelpers = require('../socket.io/helpers');
-const websockets = require('../socket.io');
-const events = require('../events');
+import url from 'url';
+import user from '../user';
+import topics from '../topics';
+import posts from '../posts';
+import privileges from '../privileges';
+import plugins from '../plugins';
+import socketHelpers from '../socket.io/helpers';
+import websockets from '../socket.io';
+import events from '../events';
 
-exports.setDefaultPostData = function (reqOrSocket, data) {
+exports.setDefaultPostData = function (reqOrSocket:{uid: number}, 
+    data:{uid: number, req: object, timestamp: number, fromQueue:}): void {
     data.uid = reqOrSocket.uid;
     data.req = exports.buildReqObject(reqOrSocket, { ...data });
     data.timestamp = Date.now();
@@ -16,11 +17,13 @@ exports.setDefaultPostData = function (reqOrSocket, data) {
 };
 
 // creates a slimmed down version of the request object
-exports.buildReqObject = (req, payload) => {
-    req = req || {};
+exports.buildReqObject = (req:{headers: string, connection:{encrypted: string},
+    request:{headers: string}, uid: number, params: object, method: object,
+    body: string, session: number, ip: object}, payload: string) => {
+    // req = req || {};
     const headers = req.headers || (req.request && req.request.headers) || {};
     const encrypted = req.connection ? !!req.connection.encrypted : false;
-    let { host } = headers;
+    let host = headers;
     const referer = headers.referer || '';
 
     if (!host) {
