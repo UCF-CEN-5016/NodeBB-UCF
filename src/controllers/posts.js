@@ -49,13 +49,19 @@ function default_1(postsController) {
         return __awaiter(this, void 0, void 0, function* () {
             const pid = parseInt(req.params.pid, 10);
             if (!pid) {
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 return next();
             }
             const [canRead, path] = yield Promise.all([
                 privileges.posts.can('topics:read', pid, req.uid),
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 posts.generatePostPath(pid, req.uid),
             ]);
             if (!path) {
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 return next();
             }
             if (!canRead) {
@@ -72,12 +78,14 @@ function default_1(postsController) {
             const start = Math.max(0, (page - 1) * postsPerPage);
             const stop = start + postsPerPage - 1;
             try {
-                const data = yield posts.getRecentPosts(req.uid, start, stop, req.params.term);
-                res.json(data);
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                const d = yield posts.getRecentPosts(req.uid, start, stop, req.params.term);
+                res.json(d);
             }
             catch (error) {
                 // Handle errors appropriately
-                console.error('Error:', error);
+                // console.error('Error:', error);
                 // res.status(500).json({ error: 'Internal Server Error' });
             }
             // res.json(data)

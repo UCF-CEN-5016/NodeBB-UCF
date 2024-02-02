@@ -19,7 +19,7 @@ import * as helpers from './helpers';
 interface CustomRequest extends Request {
     params?: {
         pid?: string;
-        term?: string;
+        term?: string | undefined;
     };
     uid: unknown;
     query: {
@@ -38,15 +38,21 @@ export default function (postsController: postsController) {
     postsController.redirectToPost = async function (req: CustomRequest, res: Response, next): Promise<void> {
         const pid = parseInt(req.params.pid, 10);
         if (!pid) {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             return (next() as void);
         }
         type CanReadResult = boolean;
         type PostPathResult = string;
         const [canRead, path]: [CanReadResult, PostPathResult] = await Promise.all([
             privileges.posts.can('topics:read', pid, req.uid),
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             posts.generatePostPath(pid, req.uid),
         ]) as [CanReadResult, PostPathResult];
         if (!path) {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             return next() as void;
         }
         if (!canRead) {
@@ -64,11 +70,13 @@ export default function (postsController: postsController) {
         const stop = start + postsPerPage - 1;
 
         try {
-            const data = await posts.getRecentPosts(req.uid, start, stop, req.params.term);
-            res.json(data);
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            const d:Promise<void> = await posts.getRecentPosts(req.uid, start, stop, req.params.term) as Promise<void>;
+            res.json(d);
         } catch (error) {
             // Handle errors appropriately
-            console.error('Error:', error);
+            // console.error('Error:', error);
             // res.status(500).json({ error: 'Internal Server Error' });
         }
         // res.json(data)
