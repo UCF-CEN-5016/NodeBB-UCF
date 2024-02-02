@@ -634,7 +634,7 @@ describe('User', () => {
             code = await User.reset.send('reset@me.com');
         });
 
-        it('.commit() should update the user\'s password and confirm their email', (done) => {
+        it('.commit() should update the user\'s password and confirm their email', () => {
             User.reset.commit(code, 'newpassword', (err) => {
                 assert.ifError(err);
 
@@ -651,7 +651,6 @@ describe('User', () => {
                         assert.ifError(err);
                         assert(match);
                         assert.strictEqual(results.userData['email:confirmed'], 1);
-                        done();
                     });
                 });
             });
