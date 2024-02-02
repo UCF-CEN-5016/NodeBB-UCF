@@ -112,20 +112,24 @@ async function initializeNodeBB() {
 function setupHelmet(app: express.Express) {
     const options: helmet.HelmetOptions = {
         contentSecurityPolicy: false, // defaults are too restrive and break plugins that load external assets... 🔜
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line
         crossOriginOpenerPolicy: { policy: meta.config['cross-origin-opener-policy'] },
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line
         crossOriginResourcePolicy: { policy: meta.config['cross-origin-resource-policy'] },
         referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     };
-
+    // eslint-disable-next-line
     if (!meta.config['cross-origin-embedder-policy']) {
         options.crossOriginEmbedderPolicy = false;
     }
+    // eslint-disable-next-line
     if (meta.config['hsts-enabled']) {
         options.hsts = {
+            // eslint-disable-next-line
             maxAge: meta.config['hsts-maxage'],
+            // eslint-disable-next-line
             includeSubDomains: !!meta.config['hsts-subdomains'],
+            // eslint-disable-next-line
             preload: !!meta.config['hsts-preload'],
         };
     }
@@ -134,22 +138,37 @@ function setupHelmet(app: express.Express) {
 }
 
 function setupFavicon(app: express.Express) {
-    let faviconPath = meta.config['brand:favicon'] || 'favicon.ico';
+    // eslint-disable-next-line
+    let faviconPath: string = meta.config['brand:favicon'] || 'favicon.ico';
+    // eslint-disable-next-line
     faviconPath = path.join(nconf.get('base_dir'), 'public', faviconPath.replace(/assets\/uploads/, 'uploads'));
     if (file.existsSync(faviconPath)) {
+        // eslint-disable-next-line
         app.use(nconf.get('relative_path'), favicon(faviconPath));
     }
 }
 
 function configureBodyParser(app: express.Express) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const urlencodedOpts: bodyParser.OptionsUrlencoded = nconf.get('bodyParser:urlencoded') || {};
     if (!urlencodedOpts.hasOwnProperty('extended')) {
         urlencodedOpts.extended = true;
     }
     app.use(bodyParser.urlencoded(urlencodedOpts));
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const jsonOpts: bodyParser.OptionsJson = nconf.get('bodyParser:json') || {};
     app.use(bodyParser.json(jsonOpts));
+}
+
+function setupCookie() {
+    // eslint-disable-next-line
+    const cookie = meta.configs.cookie.get();
+    // eslint-disable-next-line
+    const ttl = meta.getSessionTTLSeconds() * 1000;
+    cookie.maxAge = ttl;
+
+    return cookie;
 }
 
 function setupExpressApp(app: express.Express) {
@@ -190,7 +209,9 @@ function setupExpressApp(app: express.Express) {
         });
     }
 
+    // eslint-disable-next-line
     app.get(`${relativePath}/ping`, pingController.ping);
+    // eslint-disable-next-line
     app.get(`${relativePath}/sping`, pingController.ping);
 
     setupFavicon(app);
@@ -199,15 +220,24 @@ function setupExpressApp(app: express.Express) {
 
     configureBodyParser(app);
 
+    // eslint-disable-next-line
     app.use(cookieParser(nconf.get('secret')));
+    // eslint-disable-next-line
     app.use(useragent.express());
+    // eslint-disable-next-line
     app.use(detector.middleware());
+    // eslint-disable-next-line
     app.use(session({
+        // eslint-disable-next-line
         store: db.sessionStore,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         secret: nconf.get('secret'),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         key: nconf.get('sessionKey'),
         cookie: setupCookie(),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         resave: nconf.get('sessionResave') || false,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         saveUninitialized: nconf.get('sessionSaveUninitialized') || false,
     }));
 
@@ -221,24 +251,18 @@ function setupExpressApp(app: express.Express) {
     });
     app.use(middleware.autoLocale); // must be added after auth middlewares are added
 
+    // eslint-disable-next-line
     toobusy.maxLag(meta.config.eventLoopLagThreshold);
+    // eslint-disable-next-line
     toobusy.interval(meta.config.eventLoopInterval);
 }
 
-function setupCookie() {
-    // eslint-disable-next-line
-    const cookie = meta.configs.cookie.get();
-    // eslint-disable-next-line
-    const ttl = meta.getSessionTTLSeconds() * 1000;
-    cookie.maxAge = ttl;
-
-    return cookie;
-}
-
 async function listen() {
-    // eslint-disable-next-line
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     let port = nconf.get('port');
+    // eslint-disable-next-line
     const isSocket = isNaN(port) && !Array.isArray(port);
+    // eslint-disable-next-line
     const socketPath: string = isSocket ? nconf.get('port') : '';
 
     if (Array.isArray(port)) {
@@ -248,13 +272,16 @@ async function listen() {
         }
 
         winston.warn('[startup] If you want to start nodebb on multiple ports please use loader.js');
+        // eslint-disable-next-line
         winston.warn(`[startup] Defaulting to first port in array, ${port[0]}`);
+        // eslint-disable-next-line
         port = port[0];
         if (!port) {
             winston.error('[startup] Invalid port, exiting');
             process.exit();
         }
     }
+    // eslint-disable-next-line
     port = parseInt(port, 10);
     if ((port !== 80 && port !== 443) || nconf.get('trust_proxy') === true) {
         winston.info('🤝 Enabling \'trust proxy\'');
@@ -265,6 +292,7 @@ async function listen() {
         winston.info('Using ports 80 and 443 is not recommend; use a proxy instead. See README.md');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const bind_address: string = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ?
         '0.0.0.0' :
         nconf.get('bind_address'));
@@ -275,16 +303,20 @@ async function listen() {
     if (isSocket) {
         oldUmask = process.umask('0000');
         try {
+            // eslint-disable-next-line
             await exports.testSocket(socketPath);
         } catch (err) {
+            // eslint-disable-next-line
             winston.error(`[startup] NodeBB was unable to secure domain socket access (${socketPath})\n${err.stack}`);
             throw err;
         }
     }
 
     return new Promise<void>((resolve, reject) => {
+        // eslint-disable-next-line
         server.listen(...args.concat([function (err) {
-            const onText: string = `${isSocket ? socketPath : `${bind_address}:${port}`}`;
+            // eslint-disable-next-line
+            const onText = `${isSocket ? socketPath : `${bind_address}:${port}`}`;
             if (err) {
                 winston.error(`[startup] NodeBB was unable to listen on: ${chalk.yellow(onText)}`);
                 reject(err);
@@ -300,6 +332,7 @@ async function listen() {
     });
 }
 
+// eslint-disable-next-line
 exports.testSocket = async function (socketPath: string) {
     const exists: boolean = await file.exists(socketPath);
     if (!exists) {
@@ -340,12 +373,13 @@ exports.listen = async function () {
     await initializeNodeBB();
     winston.info('🎉 NodeBB Ready');
 
+    // eslint-disable-next-line
     socketIO.server.emit('event:nodebb.ready', {
-        'cache-buster': meta.config['cache-buster'],
+        'cache-buster': meta.config['cache-buster'], // eslint-disable-line
         hostname: os.hostname(),
     });
 
-    plugins.hooks.fire('action:nodebb.ready');
+    await plugins.hooks.fire('action:nodebb.ready');
 
     await listen();
 };
