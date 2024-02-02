@@ -2,10 +2,10 @@
           @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment,
           @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-misused-promises
           , @typescript-eslint/no-unsafe-argument */
-import * as async from 'async';
-import db from '../database';
-import user from '../user';
-import posts from '../posts';
+import async = require('async');
+import db = require('../database');
+import user = require('../user');
+import posts = require('../posts');
 
 interface Topic {
     getUserBookmark: (tid: number, uid: string) => Promise<number | null>;
@@ -20,7 +20,7 @@ interface Topic {
     updateTopicBookmarks: (tid: number, pids: number[]) => Promise<void>;
 }
 
-export default function (Topics: Topic) {
+module.exports = function (Topics: Topic) {
     Topics.getUserBookmark = async function (tid, uid) : Promise<number | null> {
         if (parseInt(uid, 10) <= 0) {
             return null;
@@ -77,4 +77,4 @@ export default function (Topics: Topic) {
             await Topics.setUserBookmark(tid, data.uid, bookmark);
         });
     };
-}
+};
