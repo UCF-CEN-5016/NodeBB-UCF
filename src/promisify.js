@@ -35,6 +35,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const util = __importStar(require("util"));
 module.exports = function (theModule, ignoreKeys = []) {
     ignoreKeys = ignoreKeys || [];
+    // Checks if a function appears to be a callback-style function.
     function isCallbackedFunction(func) {
         if (typeof func !== 'function') {
             return false;
@@ -42,23 +43,33 @@ module.exports = function (theModule, ignoreKeys = []) {
         const str = func.toString().split('\n')[0];
         return str.includes('callback)');
     }
+    // Checks if a function is an asynchronous function.
     function isAsyncFunction(fn) {
         return fn && fn.constructor && fn.constructor.name === 'AsyncFunction';
     }
+    // Wraps an asynchronous function with a callback-style function
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     function wrapCallback(origFn, callbackFn) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         return function wrapperCallback(...args) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (args.length && typeof args[args.length - 1] === 'function') {
                     const cb = args.pop();
                     args.push((err, res) => (res !== undefined ? cb(err, res) : cb(err)));
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                     const result = yield callbackFn(...args);
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                     return result;
                 }
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 const result = yield origFn(...args);
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 return result;
             });
         };
     }
+    // Wraps a callback-style function with a promise-style function.
     function wrapPromise(origFn, promiseFn) {
         return function wrapperPromise(...args) {
             if (args.length && typeof args[args.length - 1] === 'function') {
@@ -67,6 +78,7 @@ module.exports = function (theModule, ignoreKeys = []) {
             return promiseFn(...args); // Type assertion here to address TypeScript error
         };
     }
+    // Recursively processes an object, converting callback-style functions to promises.
     function promisifyRecursive(module) {
         if (!module) {
             return;
@@ -77,11 +89,11 @@ module.exports = function (theModule, ignoreKeys = []) {
                 return;
             }
             if (isAsyncFunction(module[key])) {
-                const wrappedCallback = util.callbackify(module[key]);
+                const wrappedCallback = util.callbackify(module[key]); // converts promise to callback
                 module[key] = wrapCallback(module[key], wrappedCallback);
             }
             else if (isCallbackedFunction(module[key])) {
-                const wrappedPromise = util.promisify(module[key]);
+                const wrappedPromise = util.promisify(module[key]); // converts callback to promise
                 module[key] = wrapPromise(module[key], wrappedPromise);
             }
             else if (typeof module[key] === 'object') {
