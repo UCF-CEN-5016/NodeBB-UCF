@@ -37,7 +37,10 @@ import auth = require('./routes/authentication');
 
 import helpers = require('./helpers');
 import promisify = require('./promisify');
-
+import middleware = require('./middleware');
+import pingController = require('./controllers/ping');
+import controllerHelpers = require('./controllers/helpers');
+import als = require('./als');
 
 declare module 'express' {
     interface Application {
@@ -88,7 +91,7 @@ server.on('connection', (conn: net.Socket) => {
 });
 
 async function initializeNodeBB() {
-    const middleware = require('./middleware');
+    //const middleware = require('./middleware');
     await meta.themes.setupPaths();
     await plugins.init(app, middleware);
     await plugins.hooks.fire('static:assets.prepare', {});
@@ -104,14 +107,14 @@ async function initializeNodeBB() {
     await topicEvents.init();
 }
 
-function setupExpressApp(app) {
-    const middleware = require('./middleware');
-    const pingController = require('./controllers/ping');
+function setupExpressApp(app: express.Express) {
+    //const middleware = require('./middleware');
+    //const pingController = require('./controllers/ping');
 
     const relativePath = nconf.get('relative_path');
     const viewsDir = nconf.get('views_dir');
 
-    app.engine('tpl', (filepath, data, next) => {
+    app.engine('tpl', (filepath: string, data: object, next) => {
         filepath = filepath.replace(/\.tpl$/, '.js');
 
         Benchpress.__express(filepath, data, next);
@@ -135,7 +138,7 @@ function setupExpressApp(app) {
     if (relativePath) {
         app.use((req, res, next) => {
             if (!req.path.startsWith(relativePath)) {
-                return require('./controllers/helpers').redirect(res, req.path);
+                return controllerHelpers.redirect(res, req.path);
             }
             next();
         });
@@ -167,8 +170,7 @@ function setupExpressApp(app) {
     app.use(middleware.addHeaders);
     app.use(middleware.processRender);
     auth.initialize(app, middleware);
-    const als = require('./als');
-    app.use((req, res, next) => {
+    app.use((req: express.Request & { uid: number }, res, next) => {
         als.run({ uid: req.uid }, next);
     });
     app.use(middleware.autoLocale); // must be added after auth middlewares are added
