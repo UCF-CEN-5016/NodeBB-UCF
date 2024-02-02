@@ -186,6 +186,7 @@ function setupExpressApp(app: express.Express) {
     app.set('view engine', 'tpl');
     app.set('views', viewsDir);
     app.set('json spaces', global.env === 'development' ? 4 : 0);
+    // eslint-disable-next-line
     app.use(flash());
 
     app.enable('view cache');
