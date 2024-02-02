@@ -43,21 +43,30 @@ const routes = require("./routes");
 const auth = require("./routes/authentication");
 const helpers = require("./helpers");
 const promisify = require("./promisify");
+const middleware = require("./middleware");
+const pingController = require("./controllers/ping");
+const controllerHelpers = require("./controllers/helpers");
+const als = require("./als");
+const toobusy = require("toobusy-js");
+const compression = require("compression");
 const app = express();
-// The next line calls a function in a module that has not been updated to TS yet
 // eslint-disable-next-line
 app.renderAsync = util.promisify(app.render.bind(app));
 let server;
 if (nconf.get('ssl')) {
     server = https.createServer({
+        // eslint-disable-next-line
         key: fs.readFileSync(nconf.get('ssl').key),
+        // eslint-disable-next-line
         cert: fs.readFileSync(nconf.get('ssl').cert),
     }, app);
 }
 else {
     server = http.createServer(app);
 }
+// eslint-disable-next-line
 module.exports.server = server;
+// eslint-disable-next-line
 module.exports.app = app;
 server.on('error', (err) => {
     if (err.name === 'EADDRINUSE') {
@@ -77,31 +86,8 @@ server.on('connection', (conn) => {
         delete connections[key];
     });
 });
-module.exports.destroy = function (callback) {
-    server.close(callback);
-    for (const connection of Object.values(connections)) {
-        connection.destroy();
-    }
-};
-exports.listen = function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        emailer.registerApp(app);
-        setupExpressApp(app);
-        helpers.register();
-        logger.init(app);
-        yield initializeNodeBB();
-        winston.info('🎉 NodeBB Ready');
-        require('./socket.io').server.emit('event:nodebb.ready', {
-            'cache-buster': meta.config['cache-buster'],
-            hostname: os.hostname(),
-        });
-        plugins.hooks.fire('action:nodebb.ready');
-        yield listen();
-    });
-};
 function initializeNodeBB() {
     return __awaiter(this, void 0, void 0, function* () {
-        const middleware = require('./middleware');
         yield meta.themes.setupPaths();
         yield plugins.init(app, middleware);
         yield plugins.hooks.fire('static:assets.prepare', {});
@@ -118,12 +104,13 @@ function initializeNodeBB() {
     });
 }
 function setupExpressApp(app) {
-    const middleware = require('./middleware');
-    const pingController = require('./controllers/ping');
+    // eslint-disable-next-line
     const relativePath = nconf.get('relative_path');
+    // eslint-disable-next-line
     const viewsDir = nconf.get('views_dir');
     app.engine('tpl', (filepath, data, next) => {
         filepath = filepath.replace(/\.tpl$/, '.js');
+        // eslint-disable-next-line
         Benchpress.__express(filepath, data, next);
     });
     app.set('view engine', 'tpl');
@@ -136,13 +123,13 @@ function setupExpressApp(app) {
         app.enable('minification');
     }
     if (meta.config.useCompression) {
-        const compression = require('compression');
+        //const compression = require('compression');
         app.use(compression());
     }
     if (relativePath) {
         app.use((req, res, next) => {
             if (!req.path.startsWith(relativePath)) {
-                return require('./controllers/helpers').redirect(res, req.path);
+                return controllerHelpers.redirect(res, req.path);
             }
             next();
         });
@@ -167,15 +154,37 @@ function setupExpressApp(app) {
     app.use(middleware.addHeaders);
     app.use(middleware.processRender);
     auth.initialize(app, middleware);
-    const als = require('./als');
     app.use((req, res, next) => {
         als.run({ uid: req.uid }, next);
     });
     app.use(middleware.autoLocale); // must be added after auth middlewares are added
-    const toobusy = require('toobusy-js');
     toobusy.maxLag(meta.config.eventLoopLagThreshold);
     toobusy.interval(meta.config.eventLoopInterval);
 }
+// eslint-disable-next-line
+exports.destroy = function (callback) {
+    server.close(callback);
+    for (const connection of Object.values(connections)) {
+        connection.destroy();
+    }
+};
+// eslint-disable-next-line
+exports.listen = function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        emailer.registerApp(app);
+        setupExpressApp(app);
+        helpers.register();
+        logger.init(app);
+        yield initializeNodeBB();
+        winston.info('🎉 NodeBB Ready');
+        require('./socket.io').server.emit('event:nodebb.ready', {
+            'cache-buster': meta.config['cache-buster'],
+            hostname: os.hostname(),
+        });
+        plugins.hooks.fire('action:nodebb.ready');
+        yield listen();
+    });
+};
 function setupHelmet(app) {
     const options = {
         contentSecurityPolicy: false,

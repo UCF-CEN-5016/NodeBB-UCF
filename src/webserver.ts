@@ -41,6 +41,9 @@ import middleware = require('./middleware');
 import pingController = require('./controllers/ping');
 import controllerHelpers = require('./controllers/helpers');
 import als = require('./als');
+import toobusy = require('toobusy-js');
+import compression = require('compression');
+import socketIO = require('./socket.io')
 
 declare module 'express' {
     interface Application {
@@ -91,7 +94,6 @@ server.on('connection', (conn: net.Socket) => {
 });
 
 async function initializeNodeBB() {
-    //const middleware = require('./middleware');
     await meta.themes.setupPaths();
     await plugins.init(app, middleware);
     await plugins.hooks.fire('static:assets.prepare', {});
@@ -108,15 +110,15 @@ async function initializeNodeBB() {
 }
 
 function setupExpressApp(app: express.Express) {
-    //const middleware = require('./middleware');
-    //const pingController = require('./controllers/ping');
-
-    const relativePath = nconf.get('relative_path');
+    // eslint-disable-next-line
+    const relativePath: string = nconf.get('relative_path');
+    // eslint-disable-next-line
     const viewsDir = nconf.get('views_dir');
 
     app.engine('tpl', (filepath: string, data: object, next) => {
         filepath = filepath.replace(/\.tpl$/, '.js');
 
+        // eslint-disable-next-line
         Benchpress.__express(filepath, data, next);
     });
     app.set('view engine', 'tpl');
@@ -132,7 +134,6 @@ function setupExpressApp(app: express.Express) {
     }
 
     if (meta.config.useCompression) {
-        const compression = require('compression');
         app.use(compression());
     }
     if (relativePath) {
@@ -175,7 +176,6 @@ function setupExpressApp(app: express.Express) {
     });
     app.use(middleware.autoLocale); // must be added after auth middlewares are added
 
-    const toobusy = require('toobusy-js');
     toobusy.maxLag(meta.config.eventLoopLagThreshold);
     toobusy.interval(meta.config.eventLoopInterval);
 }
@@ -197,7 +197,7 @@ exports.listen = async function () {
     await initializeNodeBB();
     winston.info('🎉 NodeBB Ready');
 
-    require('./socket.io').server.emit('event:nodebb.ready', {
+    socketIO.server.emit('event:nodebb.ready', {
         'cache-buster': meta.config['cache-buster'],
         hostname: os.hostname(),
     });
@@ -252,18 +252,20 @@ function setupFavicon(app) {
 }
 
 function configureBodyParser(app) {
-    const urlencodedOpts = nconf.get('bodyParser:urlencoded') || {};
+    const urlencodedOpts: bodyParser.OptionsUrlencoded = nconf.get('bodyParser:urlencoded') || {};
     if (!urlencodedOpts.hasOwnProperty('extended')) {
         urlencodedOpts.extended = true;
     }
     app.use(bodyParser.urlencoded(urlencodedOpts));
 
-    const jsonOpts = nconf.get('bodyParser:json') || {};
+    const jsonOpts: bodyParser.OptionsJson = nconf.get('bodyParser:json') || {};
     app.use(bodyParser.json(jsonOpts));
 }
 
 function setupCookie() {
+    // eslint-disable-next-line
     const cookie = meta.configs.cookie.get();
+    // eslint-disable-next-line
     const ttl = meta.getSessionTTLSeconds() * 1000;
     cookie.maxAge = ttl;
 
@@ -271,9 +273,10 @@ function setupCookie() {
 }
 
 async function listen() {
+    // eslint-disable-next-line
     let port = nconf.get('port');
     const isSocket = isNaN(port) && !Array.isArray(port);
-    const socketPath = isSocket ? nconf.get('port') : '';
+    const socketPath: string = isSocket ? nconf.get('port') : '';
 
     if (Array.isArray(port)) {
         if (!port.length) {
@@ -299,9 +302,10 @@ async function listen() {
         winston.info('Using ports 80 and 443 is not recommend; use a proxy instead. See README.md');
     }
 
-    const bind_address = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ?
+    const bind_address: string = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ?
         '0.0.0.0' :
         nconf.get('bind_address'));
+    // eslint-disable-next-line
     const args = isSocket ? [socketPath] : [port, bind_address];
     let oldUmask: number;
 
@@ -317,7 +321,7 @@ async function listen() {
 
     return new Promise<void>((resolve, reject) => {
         server.listen(...args.concat([function (err) {
-            const onText = `${isSocket ? socketPath : `${bind_address}:${port}`}`;
+            const onText: string = `${isSocket ? socketPath : `${bind_address}:${port}`}`;
             if (err) {
                 winston.error(`[startup] NodeBB was unable to listen on: ${chalk.yellow(onText)}`);
                 reject(err);
@@ -334,8 +338,6 @@ async function listen() {
 }
 
 exports.testSocket = async function (socketPath: string) {
-    // const net = require('net');
-    // const file = require('./file');
     const exists: boolean = await file.exists(socketPath);
     if (!exists) {
         return;
