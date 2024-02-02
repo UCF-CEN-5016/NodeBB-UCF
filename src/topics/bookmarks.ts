@@ -5,12 +5,12 @@
 import async = require('async');
 import db = require('../database');
 import user = require('../user');
-import posts = require('../posts');
 
 interface Topic {
     getUserBookmark: (tid: number, uid: string) => Promise<number | null>;
     getUserBookmarks: (tids: number[], uid: string) => Promise<(number | null)[]>;
     setUserBookmark: (tid: number, uid: string, index: number) => Promise<void>;
+    getPostCount: (tid: number) => number | PromiseLike<number>;
     getTopicBookmarks: (tid: number) => Promise<{
         score: string;
         value: number;
@@ -44,7 +44,7 @@ module.exports = function (Topics: Topic) {
     };
 
     Topics.updateTopicBookmarks = async function (tid, pids) {
-        const maxIndex = await posts.getPostCount(tid);
+        const maxIndex = await Topics.getPostCount(tid);
         const indices = await db.sortedSetRanks(`tid:${tid}:posts`, pids);
         const postIndices = indices.map(i => (i === null ? 0 : i + 1));
         const minIndex = Math.min(...postIndices);

@@ -43,7 +43,6 @@ exports.__esModule = true;
 var async = require("async");
 var db = require("../database");
 var user = require("../user");
-var posts = require("../posts");
 module.exports = function (Topics) {
     Topics.getUserBookmark = function (tid, uid) {
         return __awaiter(this, void 0, void 0, function () {
@@ -101,7 +100,7 @@ module.exports = function (Topics) {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, posts.getPostCount(tid)];
+                    case 0: return [4 /*yield*/, Topics.getPostCount(tid)];
                     case 1:
                         maxIndex = _a.sent();
                         return [4 /*yield*/, db.sortedSetRanks("tid:".concat(tid, ":posts"), pids)];
@@ -151,4 +150,3 @@ module.exports = function (Topics) {
         });
     };
 };
-
