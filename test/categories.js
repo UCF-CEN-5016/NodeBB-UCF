@@ -539,7 +539,7 @@ describe('Categories', () => {
             ], done);
         });
 
-        it('should copy settings from', (done) => {
+        it('should copy settings from', () => {
             let child1Cid;
             let parentCid;
             async.waterfall([
@@ -565,7 +565,7 @@ describe('Categories', () => {
                     assert.equal(description, 'copy me');
                     next();
                 },
-            ], done);
+            ]);
         });
 
         it('should copy privileges from another category', async () => {
