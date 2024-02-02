@@ -63,4 +63,4 @@ module.exports = function (Topics) {
             await Topics.setUserBookmark(tid, data.uid, bookmark);
         });
     };
-};
+}; 
