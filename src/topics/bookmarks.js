@@ -73,4 +73,3 @@ const Topics = {
         });
     },
 };
-exports.default = Topics;

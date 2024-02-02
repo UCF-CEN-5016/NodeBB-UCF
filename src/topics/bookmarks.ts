@@ -75,4 +75,3 @@ const Topics: Topic = {
     },
 };
 
-export default Topics;
