@@ -82,5 +82,4 @@ function createTopicsModule(Topics) {
     return {
         getSuggestedTopics,
     };
-}
-exports.default = createTopicsModule;
+};
