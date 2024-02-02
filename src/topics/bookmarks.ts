@@ -8,7 +8,7 @@ import user from '../user';
 import posts from '../posts';
 
 interface Topic {
-    getUserBookmark: (tid: number, uid: string) => Promise<number>;
+    getUserBookmark: (tid: number, uid: string) => Promise<number | null>;
     getUserBookmarks: (tids: number[], uid: string) => Promise<(number | null)[]>;
     setUserBookmark: (tid: number, uid: string, index: number) => Promise<void>;
     getTopicBookmarks: (tid: number) => Promise<{
@@ -20,30 +20,30 @@ interface Topic {
     updateTopicBookmarks: (tid: number, pids: number[]) => Promise<void>;
 }
 
-const Topics: Topic = {
-    getUserBookmark: async function (tid, uid) : Promise<number> {
+export default function (Topics: Topic) {
+    Topics.getUserBookmark = async function (tid, uid) : Promise<number | null> {
         if (parseInt(uid, 10) <= 0) {
             return null;
         }
         return await db.sortedSetScore(`tid:${tid}:bookmarks`, uid) as number;
-    },
+    };
 
-    getUserBookmarks: async function (tids, uid) {
+    Topics.getUserBookmarks = async function (tids, uid) {
         if (parseInt(uid, 10) <= 0) {
             return tids.map(() => null);
         }
         return await db.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
-    },
+    };
 
-    setUserBookmark: async function (tid, uid, index) {
+    Topics.setUserBookmark = async function (tid, uid, index) {
         await db.sortedSetAdd(`tid:${tid}:bookmarks`, index, uid);
-    },
+    };
 
-    getTopicBookmarks: async function (tid) {
+    Topics.getTopicBookmarks = async function (tid) {
         return await db.getSortedSetRangeWithScores(`tid:${tid}:bookmarks`, 0, -1);
-    },
+    };
 
-    updateTopicBookmarks: async function (tid, pids) {
+    Topics.updateTopicBookmarks = async function (tid, pids) {
         const maxIndex = await posts.getPostCount(tid);
         const indices = await db.sortedSetRanks(`tid:${tid}:posts`, pids);
         const postIndices = indices.map(i => (i === null ? 0 : i + 1));
@@ -76,6 +76,5 @@ const Topics: Topic = {
 
             await Topics.setUserBookmark(tid, data.uid, bookmark);
         });
-    },
-};
-export default Topics;
+    };
+}
