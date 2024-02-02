@@ -35,7 +35,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+          @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment,
+          @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-misused-promises
+          , @typescript-eslint/no-unsafe-argument */
 const async = __importStar(require("async"));
 const database_1 = __importDefault(require("../database"));
 const user_1 = __importDefault(require("../user"));
@@ -97,3 +100,4 @@ const Topics = {
         });
     },
 };
+exports.default = Topics;
