@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -35,11 +35,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var async = require('async');
-var db = require('../database');
-var user = require('../user');
-module.exports = function (Topics) {
-    Topics.getUserBookmark = function (tid, uid) {
+exports.__esModule = true;
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,
+          @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment,
+          @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-misused-promises
+          , @typescript-eslint/no-unsafe-argument */
+var async = require("async");
+var database_1 = require("../database");
+var user_1 = require("../user");
+var posts_1 = require("../posts");
+var Topics = {
+    getUserBookmark: function (tid, uid) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -47,13 +53,13 @@ module.exports = function (Topics) {
                         if (parseInt(uid, 10) <= 0) {
                             return [2 /*return*/, null];
                         }
-                        return [4 /*yield*/, db.sortedSetScore("tid:".concat(tid, ":bookmarks"), uid)];
+                        return [4 /*yield*/, database_1["default"].sortedSetScore("tid:".concat(tid, ":bookmarks"), uid)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
-    };
-    Topics.getUserBookmarks = function (tids, uid) {
+    },
+    getUserBookmarks: function (tids, uid) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -61,44 +67,44 @@ module.exports = function (Topics) {
                         if (parseInt(uid, 10) <= 0) {
                             return [2 /*return*/, tids.map(function () { return null; })];
                         }
-                        return [4 /*yield*/, db.sortedSetsScore(tids.map(function (tid) { return "tid:".concat(tid, ":bookmarks"); }), uid)];
+                        return [4 /*yield*/, database_1["default"].sortedSetsScore(tids.map(function (tid) { return "tid:".concat(tid, ":bookmarks"); }), uid)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
-    };
-    Topics.setUserBookmark = function (tid, uid, index) {
+    },
+    setUserBookmark: function (tid, uid, index) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, db.sortedSetAdd("tid:".concat(tid, ":bookmarks"), index, uid)];
+                    case 0: return [4 /*yield*/, database_1["default"].sortedSetAdd("tid:".concat(tid, ":bookmarks"), index, uid)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
                 }
             });
         });
-    };
-    Topics.getTopicBookmarks = function (tid) {
+    },
+    getTopicBookmarks: function (tid) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, db.getSortedSetRangeWithScores("tid:".concat(tid, ":bookmarks"), 0, -1)];
+                    case 0: return [4 /*yield*/, database_1["default"].getSortedSetRangeWithScores("tid:".concat(tid, ":bookmarks"), 0, -1)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
-    };
-    Topics.updateTopicBookmarks = function (tid, pids) {
+    },
+    updateTopicBookmarks: function (tid, pids) {
         return __awaiter(this, void 0, void 0, function () {
             var maxIndex, indices, postIndices, minIndex, bookmarks, uidData;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, Topics.getPostCount(tid)];
+                    case 0: return [4 /*yield*/, posts_1["default"].getPostCount(tid)];
                     case 1:
                         maxIndex = _a.sent();
-                        return [4 /*yield*/, db.sortedSetRanks("tid:".concat(tid, ":posts"), pids)];
+                        return [4 /*yield*/, database_1["default"].sortedSetRanks("tid:".concat(tid, ":posts"), pids)];
                     case 2:
                         indices = _a.sent();
                         postIndices = indices.map(function (i) { return (i === null ? 0 : i + 1); });
@@ -106,7 +112,7 @@ module.exports = function (Topics) {
                         return [4 /*yield*/, Topics.getTopicBookmarks(tid)];
                     case 3:
                         bookmarks = _a.sent();
-                        uidData = bookmarks.map(function (b) { return ({ uid: b.value, bookmark: parseInt(b.score, 10) }); })
+                        uidData = bookmarks.map(function (b) { return ({ uid: String(b.value), bookmark: parseInt(b.score, 10) }); })
                             .filter(function (data) { return data.bookmark >= minIndex; });
                         return [4 /*yield*/, async.eachLimit(uidData, 50, function (data) { return __awaiter(_this, void 0, void 0, function () {
                                 var bookmark, settings;
@@ -124,7 +130,7 @@ module.exports = function (Topics) {
                                             if (bookmark === data.bookmark) {
                                                 return [2 /*return*/];
                                             }
-                                            return [4 /*yield*/, user.getSettings(data.uid)];
+                                            return [4 /*yield*/, user_1["default"].getSettings(data.uid)];
                                         case 1:
                                             settings = _a.sent();
                                             if (settings.topicPostSort === 'most_votes') {
@@ -143,5 +149,5 @@ module.exports = function (Topics) {
                 }
             });
         });
-    };
+    }
 };
