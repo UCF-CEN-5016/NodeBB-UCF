@@ -20,6 +20,8 @@ import helmet = require('helmet');
 import net = require('net');
 import https = require('https');
 import http = require('http');
+import toobusy = require('toobusy-js');
+import compression = require('compression');
 
 import Benchpress = require('benchpressjs');
 import db = require('./database');
@@ -41,8 +43,6 @@ import middleware = require('./middleware');
 import pingController = require('./controllers/ping');
 import controllerHelpers = require('./controllers/helpers');
 import als = require('./als');
-import toobusy = require('toobusy-js');
-import compression = require('compression');
 import socketIO = require('./socket.io')
 
 declare module 'express' {
@@ -109,6 +109,49 @@ async function initializeNodeBB() {
     await topicEvents.init();
 }
 
+function setupHelmet(app: express.Express) {
+    const options: helmet.HelmetOptions = {
+        contentSecurityPolicy: false, // defaults are too restrive and break plugins that load external assets... 🔜
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment @typescript-eslint/no-unsafe-member-access
+        crossOriginOpenerPolicy: { policy: meta.config['cross-origin-opener-policy'] },
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment @typescript-eslint/no-unsafe-member-access
+        crossOriginResourcePolicy: { policy: meta.config['cross-origin-resource-policy'] },
+        referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    };
+
+    if (!meta.config['cross-origin-embedder-policy']) {
+        options.crossOriginEmbedderPolicy = false;
+    }
+    if (meta.config['hsts-enabled']) {
+        options.hsts = {
+            maxAge: meta.config['hsts-maxage'],
+            includeSubDomains: !!meta.config['hsts-subdomains'],
+            preload: !!meta.config['hsts-preload'],
+        };
+    }
+
+    app.use(helmet.default(options));
+}
+
+function setupFavicon(app: express.Express) {
+    let faviconPath = meta.config['brand:favicon'] || 'favicon.ico';
+    faviconPath = path.join(nconf.get('base_dir'), 'public', faviconPath.replace(/assets\/uploads/, 'uploads'));
+    if (file.existsSync(faviconPath)) {
+        app.use(nconf.get('relative_path'), favicon(faviconPath));
+    }
+}
+
+function configureBodyParser(app: express.Express) {
+    const urlencodedOpts: bodyParser.OptionsUrlencoded = nconf.get('bodyParser:urlencoded') || {};
+    if (!urlencodedOpts.hasOwnProperty('extended')) {
+        urlencodedOpts.extended = true;
+    }
+    app.use(bodyParser.urlencoded(urlencodedOpts));
+
+    const jsonOpts: bodyParser.OptionsJson = nconf.get('bodyParser:json') || {};
+    app.use(bodyParser.json(jsonOpts));
+}
+
 function setupExpressApp(app: express.Express) {
     // eslint-disable-next-line
     const relativePath: string = nconf.get('relative_path');
@@ -133,7 +176,9 @@ function setupExpressApp(app: express.Express) {
         app.enable('minification');
     }
 
+    // eslint-disable-next-line
     if (meta.config.useCompression) {
+        // eslint-disable-next-line
         app.use(compression());
     }
     if (relativePath) {
@@ -178,88 +223,6 @@ function setupExpressApp(app: express.Express) {
 
     toobusy.maxLag(meta.config.eventLoopLagThreshold);
     toobusy.interval(meta.config.eventLoopInterval);
-}
-
-// eslint-disable-next-line
-exports.destroy = function (callback: () => void) {
-    server.close(callback);
-    for (const connection of Object.values(connections)) {
-        (connection as net.Socket).destroy();
-    }
-};
-
-// eslint-disable-next-line
-exports.listen = async function () {
-    emailer.registerApp(app);
-    setupExpressApp(app);
-    helpers.register();
-    logger.init(app);
-    await initializeNodeBB();
-    winston.info('🎉 NodeBB Ready');
-
-    socketIO.server.emit('event:nodebb.ready', {
-        'cache-buster': meta.config['cache-buster'],
-        hostname: os.hostname(),
-    });
-
-    plugins.hooks.fire('action:nodebb.ready');
-
-    await listen();
-};
-
-interface HelmetOptions {
-    contentSecurityPolicy: boolean;
-    crossOriginOpenerPolicy: { policy: any; };
-    crossOriginResourcePolicy: { policy: any; };
-    referrerPolicy: { policy: string; };
-    crossOriginEmbedderPolicy?: boolean;
-    hsts?: {
-        maxAge: any;
-        includeSubDomains: boolean;
-        preload: boolean;
-    };
-}
-
-function setupHelmet(app: any) {
-    const options: HelmetOptions = {
-        contentSecurityPolicy: false, // defaults are too restrive and break plugins that load external assets... 🔜
-        crossOriginOpenerPolicy: { policy: meta.config['cross-origin-opener-policy'] },
-        crossOriginResourcePolicy: { policy: meta.config['cross-origin-resource-policy'] },
-        referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    };
-
-    if (!meta.config['cross-origin-embedder-policy']) {
-        options.crossOriginEmbedderPolicy = false;
-    }
-    if (meta.config['hsts-enabled']) {
-        options.hsts = {
-            maxAge: meta.config['hsts-maxage'],
-            includeSubDomains: !!meta.config['hsts-subdomains'],
-            preload: !!meta.config['hsts-preload'],
-        };
-    }
-
-    app.use(helmet.default(options));
-}
-
-
-function setupFavicon(app) {
-    let faviconPath = meta.config['brand:favicon'] || 'favicon.ico';
-    faviconPath = path.join(nconf.get('base_dir'), 'public', faviconPath.replace(/assets\/uploads/, 'uploads'));
-    if (file.existsSync(faviconPath)) {
-        app.use(nconf.get('relative_path'), favicon(faviconPath));
-    }
-}
-
-function configureBodyParser(app) {
-    const urlencodedOpts: bodyParser.OptionsUrlencoded = nconf.get('bodyParser:urlencoded') || {};
-    if (!urlencodedOpts.hasOwnProperty('extended')) {
-        urlencodedOpts.extended = true;
-    }
-    app.use(bodyParser.urlencoded(urlencodedOpts));
-
-    const jsonOpts: bodyParser.OptionsJson = nconf.get('bodyParser:json') || {};
-    app.use(bodyParser.json(jsonOpts));
 }
 
 function setupCookie() {
@@ -358,6 +321,33 @@ exports.testSocket = async function (socketPath: string) {
             reject(new Error('port-in-use'));
         });
     });
+};
+
+// eslint-disable-next-line
+exports.destroy = function (callback: () => void) {
+    server.close(callback);
+    for (const connection of Object.values(connections)) {
+        (connection as net.Socket).destroy();
+    }
+};
+
+// eslint-disable-next-line
+exports.listen = async function () {
+    emailer.registerApp(app);
+    setupExpressApp(app);
+    helpers.register();
+    logger.init(app);
+    await initializeNodeBB();
+    winston.info('🎉 NodeBB Ready');
+
+    socketIO.server.emit('event:nodebb.ready', {
+        'cache-buster': meta.config['cache-buster'],
+        hostname: os.hostname(),
+    });
+
+    plugins.hooks.fire('action:nodebb.ready');
+
+    await listen();
 };
 
 promisify(exports);

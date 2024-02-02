@@ -28,6 +28,8 @@ const helmet = require("helmet");
 const net = require("net");
 const https = require("https");
 const http = require("http");
+const toobusy = require("toobusy-js");
+const compression = require("compression");
 const Benchpress = require("benchpressjs");
 const db = require("./database");
 const analytics = require("./analytics");
@@ -47,8 +49,7 @@ const middleware = require("./middleware");
 const pingController = require("./controllers/ping");
 const controllerHelpers = require("./controllers/helpers");
 const als = require("./als");
-const toobusy = require("toobusy-js");
-const compression = require("compression");
+const socketIO = require("./socket.io");
 const app = express();
 // eslint-disable-next-line
 app.renderAsync = util.promisify(app.render.bind(app));
@@ -103,6 +104,43 @@ function initializeNodeBB() {
         yield topicEvents.init();
     });
 }
+function setupHelmet(app) {
+    const options = {
+        contentSecurityPolicy: false,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment @typescript-eslint/no-unsafe-member-access
+        crossOriginOpenerPolicy: { policy: meta.config['cross-origin-opener-policy'] },
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment @typescript-eslint/no-unsafe-member-access
+        crossOriginResourcePolicy: { policy: meta.config['cross-origin-resource-policy'] },
+        referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    };
+    if (!meta.config['cross-origin-embedder-policy']) {
+        options.crossOriginEmbedderPolicy = false;
+    }
+    if (meta.config['hsts-enabled']) {
+        options.hsts = {
+            maxAge: meta.config['hsts-maxage'],
+            includeSubDomains: !!meta.config['hsts-subdomains'],
+            preload: !!meta.config['hsts-preload'],
+        };
+    }
+    app.use(helmet.default(options));
+}
+function setupFavicon(app) {
+    let faviconPath = meta.config['brand:favicon'] || 'favicon.ico';
+    faviconPath = path.join(nconf.get('base_dir'), 'public', faviconPath.replace(/assets\/uploads/, 'uploads'));
+    if (file.existsSync(faviconPath)) {
+        app.use(nconf.get('relative_path'), favicon(faviconPath));
+    }
+}
+function configureBodyParser(app) {
+    const urlencodedOpts = nconf.get('bodyParser:urlencoded') || {};
+    if (!urlencodedOpts.hasOwnProperty('extended')) {
+        urlencodedOpts.extended = true;
+    }
+    app.use(bodyParser.urlencoded(urlencodedOpts));
+    const jsonOpts = nconf.get('bodyParser:json') || {};
+    app.use(bodyParser.json(jsonOpts));
+}
 function setupExpressApp(app) {
     // eslint-disable-next-line
     const relativePath = nconf.get('relative_path');
@@ -122,8 +160,9 @@ function setupExpressApp(app) {
         app.enable('cache');
         app.enable('minification');
     }
+    // eslint-disable-next-line
     if (meta.config.useCompression) {
-        //const compression = require('compression');
+        // eslint-disable-next-line
         app.use(compression());
     }
     if (relativePath) {
@@ -161,73 +200,17 @@ function setupExpressApp(app) {
     toobusy.maxLag(meta.config.eventLoopLagThreshold);
     toobusy.interval(meta.config.eventLoopInterval);
 }
-// eslint-disable-next-line
-exports.destroy = function (callback) {
-    server.close(callback);
-    for (const connection of Object.values(connections)) {
-        connection.destroy();
-    }
-};
-// eslint-disable-next-line
-exports.listen = function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        emailer.registerApp(app);
-        setupExpressApp(app);
-        helpers.register();
-        logger.init(app);
-        yield initializeNodeBB();
-        winston.info('🎉 NodeBB Ready');
-        require('./socket.io').server.emit('event:nodebb.ready', {
-            'cache-buster': meta.config['cache-buster'],
-            hostname: os.hostname(),
-        });
-        plugins.hooks.fire('action:nodebb.ready');
-        yield listen();
-    });
-};
-function setupHelmet(app) {
-    const options = {
-        contentSecurityPolicy: false,
-        crossOriginOpenerPolicy: { policy: meta.config['cross-origin-opener-policy'] },
-        crossOriginResourcePolicy: { policy: meta.config['cross-origin-resource-policy'] },
-        referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    };
-    if (!meta.config['cross-origin-embedder-policy']) {
-        options.crossOriginEmbedderPolicy = false;
-    }
-    if (meta.config['hsts-enabled']) {
-        options.hsts = {
-            maxAge: meta.config['hsts-maxage'],
-            includeSubDomains: !!meta.config['hsts-subdomains'],
-            preload: !!meta.config['hsts-preload'],
-        };
-    }
-    app.use(helmet.default(options));
-}
-function setupFavicon(app) {
-    let faviconPath = meta.config['brand:favicon'] || 'favicon.ico';
-    faviconPath = path.join(nconf.get('base_dir'), 'public', faviconPath.replace(/assets\/uploads/, 'uploads'));
-    if (file.existsSync(faviconPath)) {
-        app.use(nconf.get('relative_path'), favicon(faviconPath));
-    }
-}
-function configureBodyParser(app) {
-    const urlencodedOpts = nconf.get('bodyParser:urlencoded') || {};
-    if (!urlencodedOpts.hasOwnProperty('extended')) {
-        urlencodedOpts.extended = true;
-    }
-    app.use(bodyParser.urlencoded(urlencodedOpts));
-    const jsonOpts = nconf.get('bodyParser:json') || {};
-    app.use(bodyParser.json(jsonOpts));
-}
 function setupCookie() {
+    // eslint-disable-next-line
     const cookie = meta.configs.cookie.get();
+    // eslint-disable-next-line
     const ttl = meta.getSessionTTLSeconds() * 1000;
     cookie.maxAge = ttl;
     return cookie;
 }
 function listen() {
     return __awaiter(this, void 0, void 0, function* () {
+        // eslint-disable-next-line
         let port = nconf.get('port');
         const isSocket = isNaN(port) && !Array.isArray(port);
         const socketPath = isSocket ? nconf.get('port') : '';
@@ -255,6 +238,7 @@ function listen() {
         const bind_address = ((nconf.get('bind_address') === '0.0.0.0' || !nconf.get('bind_address')) ?
             '0.0.0.0' :
             nconf.get('bind_address'));
+        // eslint-disable-next-line
         const args = isSocket ? [socketPath] : [port, bind_address];
         let oldUmask;
         if (isSocket) {
@@ -286,8 +270,6 @@ function listen() {
 }
 exports.testSocket = function (socketPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        // const net = require('net');
-        // const file = require('./file');
         const exists = yield file.exists(socketPath);
         if (!exists) {
             return;
@@ -311,6 +293,30 @@ exports.testSocket = function (socketPath) {
                 reject(new Error('port-in-use'));
             });
         });
+    });
+};
+// eslint-disable-next-line
+exports.destroy = function (callback) {
+    server.close(callback);
+    for (const connection of Object.values(connections)) {
+        connection.destroy();
+    }
+};
+// eslint-disable-next-line
+exports.listen = function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        emailer.registerApp(app);
+        setupExpressApp(app);
+        helpers.register();
+        logger.init(app);
+        yield initializeNodeBB();
+        winston.info('🎉 NodeBB Ready');
+        socketIO.server.emit('event:nodebb.ready', {
+            'cache-buster': meta.config['cache-buster'],
+            hostname: os.hostname(),
+        });
+        plugins.hooks.fire('action:nodebb.ready');
+        yield listen();
     });
 };
 promisify(exports);
