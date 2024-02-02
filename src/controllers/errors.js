@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleURIErrors = void 0;
+exports.handleErrors = exports.handleURIErrors = void 0;
 // eslint-disable-next-line import/no-import-module-exports
 const nconf_1 = __importDefault(require("nconf"));
 // eslint-disable-next-line import/no-import-module-exports
@@ -63,9 +63,25 @@ function handleURIErrors(err, req, res, next) {
     });
 }
 exports.handleURIErrors = handleURIErrors;
+function getErrorHandlers(cases) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const result = yield plugins_1.default.hooks.fire('filter:error.handle', { cases });
+            return result;
+        }
+        catch (err) {
+            // Assume defaults
+            const knownError = err;
+            winston_1.default.warn(`[errors/handle] Unable to retrieve plugin handlers for errors: ${knownError.message}`);
+            return { cases };
+        }
+    });
+}
 // this needs to have four arguments or express treats it as `(req, res, next)`
 // don't remove `next`!
-exports.handleErrors = function handleErrors(err, req, res, next) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function handleErrors(err, req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         const cases = {
             EBADCSRFTOKEN: function () {
@@ -100,12 +116,14 @@ exports.handleErrors = function handleErrors(err, req, res, next) {
                 const data = {
                     path: validator_1.default.escape(path),
                     error: validator_1.default.escape(String(err.message)),
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     bodyClass: helpers_1.default.buildBodyClass(req, res),
                 };
                 if (res.locals.isAPI) {
                     res.json(data);
                 }
                 else {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                     yield middleware_1.default.buildHeaderAsync(req, res);
                     res.render('500', data);
                 }
@@ -114,6 +132,7 @@ exports.handleErrors = function handleErrors(err, req, res, next) {
         const data = yield getErrorHandlers(cases);
         try {
             if (data.cases.hasOwnProperty(err.code)) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 data.cases[err.code](err, req, res, defaultHandler);
             }
             else {
@@ -121,24 +140,12 @@ exports.handleErrors = function handleErrors(err, req, res, next) {
             }
         }
         catch (_err) {
-            winston_1.default.error(`${req.method} ${req.originalUrl}\n${_err.stack}`);
+            const knownError = _err;
+            winston_1.default.error(`${req.method} ${req.originalUrl}\n${knownError.stack}`);
             if (!res.headersSent) {
-                res.status(500).send(_err.message);
+                res.status(500).send(knownError.message);
             }
         }
     });
-};
-function getErrorHandlers(cases) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            return yield plugins_1.default.hooks.fire('filter:error.handle', {
-                cases: cases,
-            });
-        }
-        catch (err) {
-            // Assume defaults
-            winston_1.default.warn(`[errors/handle] Unable to retrieve plugin handlers for errors: ${err.message}`);
-            return { cases };
-        }
-    });
 }
+exports.handleErrors = handleErrors;

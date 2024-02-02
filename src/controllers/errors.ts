@@ -22,8 +22,23 @@ const relative_path: string = nconf.get('relative_path') as string;
 interface CustomError extends Error {
     status: string,
     path: string,
-    code: number
+    code: number,
 }
+
+interface Case {
+    EBADCSRFTOKEN: () => void,
+    'blacklisted-ip': () => void
+}
+
+interface ErrorHandlersSuccess {
+    cases: Case;
+}
+
+interface ErrorHandlersFailure {
+    cases: Case;
+}
+
+type ErrorHandlersResult = ErrorHandlersSuccess | ErrorHandlersFailure;
 
 export async function handleURIErrors(err: CustomError, req: Request, res: Response, next: NextFunction) {
     // Handle cases where malformed URIs are passed in
@@ -53,10 +68,24 @@ export async function handleURIErrors(err: CustomError, req: Request, res: Respo
     }
 }
 
+async function getErrorHandlers(cases: Case): Promise<ErrorHandlersResult> {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const result = await plugins.hooks.fire('filter:error.handle', { cases });
+        return result as ErrorHandlersSuccess;
+    } catch (err: unknown) {
+        // Assume defaults
+        const knownError = err as CustomError;
+        winston.warn(`[errors/handle] Unable to retrieve plugin handlers for errors: ${knownError.message}`);
+        return { cases } as ErrorHandlersFailure;
+    }
+}
+
 // this needs to have four arguments or express treats it as `(req, res, next)`
 // don't remove `next`!
-exports.handleErrors = async function handleErrors(err: CustomError, req: Request, res: Response, next: NextFunction) { // eslint-disable-line no-unused-vars
-    const cases = {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function handleErrors(err: CustomError, req: Request, res: Response, next: NextFunction) {
+    const cases: Case = {
         EBADCSRFTOKEN: function () {
             winston.error(`${req.method} ${req.originalUrl}\n${err.message}`);
             res.sendStatus(403);
@@ -91,38 +120,32 @@ exports.handleErrors = async function handleErrors(err: CustomError, req: Reques
         const data = {
             path: validator.escape(path),
             error: validator.escape(String(err.message)),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             bodyClass: middlewareHelpers.buildBodyClass(req, res),
         };
         if (res.locals.isAPI) {
             res.json(data);
         } else {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             await middleware.buildHeaderAsync(req, res);
             res.render('500', data);
         }
     };
-    const data = await getErrorHandlers(cases);
+    const data: ErrorHandlersResult = await getErrorHandlers(cases);
     try {
         if (data.cases.hasOwnProperty(err.code)) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             data.cases[err.code](err, req, res, defaultHandler);
         } else {
             await defaultHandler();
         }
-    } catch (_err) {
-        winston.error(`${req.method} ${req.originalUrl}\n${_err.stack}`);
+    } catch (_err: unknown) {
+        const knownError = _err as CustomError;
+        winston.error(`${req.method} ${req.originalUrl}\n${knownError.stack}`);
         if (!res.headersSent) {
-            res.status(500).send(_err.message);
+            res.status(500).send(knownError.message);
         }
     }
-};
-
-async function getErrorHandlers(cases) {
-    try {
-        return await plugins.hooks.fire('filter:error.handle', {
-            cases: cases,
-        });
-    } catch (err) {
-        // Assume defaults
-        winston.warn(`[errors/handle] Unable to retrieve plugin handlers for errors: ${err.message}`);
-        return { cases };
-    }
 }
+
+
